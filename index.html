@@ -1009,6 +1009,9 @@ Answer in this exact JSON format (no other text):
             const rememberBtn = r.aiVerified && !r.remembered
                 ? `<div style="padding:8px 16px 12px 46px;"><button onclick="lcRememberLink('${escH(r.href)}','${escH((r.linkText||r.href).replace(/'/g,''))}',this)" style="background:#02013C;color:white;border:none;padding:6px 14px;border-radius:6px;font-family:Raleway,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">💾 Always approve this link</button></div>`
                 : '';
+            const unapproveBtn = r.remembered
+                ? `<button onclick="lcUnapproveLink('${escH(r.href)}',this)" title="Remove from approved list" style="background:none;border:1px solid #cbd5e0;color:#a0aec0;padding:2px 8px;border-radius:4px;font-family:Raleway,sans-serif;font-size:10px;font-weight:700;cursor:pointer;margin-left:8px;flex-shrink:0;white-space:nowrap;" onmouseover="this.style.borderColor='#fc8181';this.style.color='#e53e3e';" onmouseout="this.style.borderColor='#cbd5e0';this.style.color='#a0aec0';">× Un-approve</button>`
+                : '';
             return `<div class="result-card ${r.status}">
                 <div class="result-header">
                     <span class="result-icon">${r.icon}</span>
@@ -1017,8 +1020,31 @@ Answer in this exact JSON format (no other text):
                         ${title?`<div class="result-context">${title}</div>`:''}
                         <div class="result-url"><a href="${escH(r.href)}" target="_blank" style="color:inherit;text-decoration:underline;word-break:break-all;">${escH(shortUrl)}</a></div>
                     </div>
-                    <div class="result-status">${escH(r.message)}</div>
+                    <div class="result-status" style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">${escH(r.message)}${unapproveBtn}</div>
                 </div>${checks}${rememberBtn}</div>`;
+        }
+
+        async function lcUnapproveLink(href, btnEl) {
+            if (!confirm('Remove "' + href + '" from the approved list?\n\nThis will commit a change to the app — live in ~60 seconds.')) return;
+            btnEl.textContent = '⏳ Removing...';
+            btnEl.disabled = true;
+            try {
+                const res = await fetch('/.netlify/functions/remove-approved-link', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({href})
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    btnEl.closest('.result-card').style.opacity = '0.5';
+                    btnEl.textContent = '✅ Removed! Live in ~60s';
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch(e) {
+                btnEl.textContent = '❌ ' + e.message;
+                btnEl.disabled = false;
+            }
         }
 
         async function lcRememberLink(href, label, btnEl) {
