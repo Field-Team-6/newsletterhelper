@@ -443,7 +443,7 @@
         </div>
         <div class="card-body" id="linkCheckerBody">
             <div class="info">
-                Paste the proof newsletter URL <strong>or</strong> paste raw HTML. Every RSVP link is verified against the actual Mobilize event — title, day of week, date, time &amp; timezone. All other links are checked for reachability.
+                Paste the proof newsletter URL and hit Check — the app fetches the HTML automatically. Every RSVP link is verified against the actual Mobilize event (title, day of week, date, time &amp; timezone). All other links are checked for reachability.
             </div>
             <label class="input-label">Newsletter proof URL (Constant Contact, etc.)</label>
             <input type="text" class="url-input" id="proofUrl"
@@ -852,17 +852,16 @@
                 if (!url&&!raw) throw new Error('Please enter a URL or paste HTML.');
 
                 if (url) {
-                    let res;
-                    try {
-                        res = await fetch(url,{signal:AbortSignal.timeout(10000)});
-                        if (!res.ok) throw new Error('not ok');
-                        html = await res.text();
-                    } catch(e) {
-                        const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                        res = await fetch(proxy,{signal:AbortSignal.timeout(15000)});
-                        if (!res.ok) throw new Error('Proxy fetch failed: '+res.status);
-                        html = (await res.json()).contents;
-                    }
+                    // Fetch the proof URL server-side — avoids CORS and bot-blocking
+                    const proofRes = await fetch('/.netlify/functions/fetch-proof', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url }),
+                        signal: AbortSignal.timeout(20000)
+                    });
+                    const proofData = await proofRes.json();
+                    if (!proofRes.ok) throw new Error(proofData.error || 'Could not fetch URL (status ' + proofRes.status + ')');
+                    html = proofData.html;
                 } else { html=raw; }
 
                 const links = lcExtractLinks(html);
