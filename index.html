@@ -93,7 +93,7 @@
             overflow: hidden;
         }
         .card-body.open {
-            max-height: 2000px;
+            max-height: 9999px;
             opacity: 1;
             padding-bottom: 40px;
         }
@@ -202,6 +202,22 @@
             60%,100% { content: '...'; }
         }
 
+        /* -- Results accordion groups -- */
+        .results-group { margin-bottom: 6px; }
+        .results-group-header {
+            display: inline-flex; align-items: center;
+            cursor: pointer; user-select: none; margin-bottom: 6px;
+        }
+        .results-group-chevron {
+            font-size: 12px; color: #718096;
+            transition: transform 0.25s ease; margin-left: 6px;
+        }
+        .results-group-header.open .results-group-chevron { transform: rotate(180deg); }
+        .results-group-body {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.25s ease; opacity: 0;
+        }
+        .results-group-body.open { max-height: 99999px; opacity: 1; }
         /* ── Link Checker extras ── */
         .input-label {
             font-family: 'Raleway', sans-serif;
@@ -448,10 +464,7 @@
             <label class="input-label">Newsletter proof URL (Constant Contact, etc.)</label>
             <input type="text" class="url-input" id="proofUrl"
                 placeholder="https://campaignlp.constantcontact.com/em/..." />
-            <div class="or-divider">OR</div>
-            <label class="input-label">Paste raw HTML from the proof email</label>
-            <textarea class="html-input" id="rawHtml"
-                placeholder='&lt;a href="https://www.mobilize.us/fieldteam6/event/12345/"&gt;RSVP HERE&lt;/a&gt; ...'></textarea>
+
             <button class="generate-btn" id="checkBtn" onclick="runLinkCheck()">
                 🔍 Check All Links
             </button>
@@ -848,7 +861,7 @@
             let html='';
             try {
                 const url=document.getElementById('proofUrl').value.trim();
-                const raw=document.getElementById('rawHtml').value.trim();
+                const raw='';
                 if (!url&&!raw) throw new Error('Please enter a URL or paste HTML.');
 
                 if (url) {
@@ -862,7 +875,7 @@
                     const proofData = await proofRes.json();
                     if (!proofRes.ok) throw new Error(proofData.error || 'Could not fetch URL (status ' + proofRes.status + ')');
                     html = proofData.html;
-                } else { html=raw; }
+                } else if(raw){html=raw;}else{throw new Error('Please enter a newsletter URL.');}
 
                 const links = lcExtractLinks(html);
                 if (!links.length) throw new Error('No links found. Make sure the HTML has <a href="..."> tags.');
@@ -892,21 +905,27 @@
                 });
 
                 resDiv.classList.add('visible');
+
+                // Track results by category for accordion
+                const resultsByCategory = { pass: [], warn: [], fail: [] };
+
                 let done=0;
                 await Promise.all(ordered.map(async (link,i) => {
                     const r = await lcCheckLink(link);
                     const el = document.getElementById('lc-'+i);
                     if (el) el.innerHTML = lcRenderCard(r);
+                    // store result
+                    if (r.status === 'pass') resultsByCategory.pass.push(i);
+                    else if (r.status === 'warn') resultsByCategory.warn.push(i);
+                    else resultsByCategory.fail.push(i);
                     done++;
                     pBar.style.width = 5+Math.round(done/ordered.length*90)+'%';
-                    // update summary
-                    const cards=document.querySelectorAll('#resultsList .result-card');
-                    let p=0,w=0,f=0;
-                    cards.forEach(c=>{if(c.classList.contains('pass'))p++;else if(c.classList.contains('warn'))w++;else if(c.classList.contains('fail'))f++;});
-                    sumDiv.innerHTML=`<span class="summary-pill pill-total">🔗 ${ordered.length} links${done<ordered.length?' · '+done+' checked':''}</span>${p?`<span class="summary-pill pill-pass">✅ ${p} OK</span>`:''}${w?`<span class="summary-pill pill-warn">⚠️ ${w} warnings</span>`:''}${f?`<span class="summary-pill pill-fail">❌ ${f} failed</span>`:''}
-                    `;
+                    // live pill update while checking
+                    lcRenderPills(sumDiv, ordered.length, done, resultsByCategory);
                 }));
-                pBar.style.width='100%';
+
+                // After all done, wrap results into accordion groups
+                lcBuildAccordions(listDiv, sumDiv, ordered, resultsByCategory, evLinks.length, genLinks.length);
 
             } catch(e) {
                 errDiv.textContent='Error: '+e.message;
@@ -916,6 +935,98 @@
                 btn.innerHTML='🔍 Check All Links';
                 setTimeout(()=>{ pWrap.classList.remove('visible'); },1200);
             }
+        }
+
+
+        // lcRenderPills — live pill update while checking
+        function lcRenderPills(sumDiv, total, done, cats) {
+            const p = cats.pass.length, w = cats.warn.length, f = cats.fail.length;
+            const checking = done < total ? ' · ' + done + '/' + total : '';
+            sumDiv.innerHTML = [
+                '<span class="summary-pill pill-total">🔗 ' + total + ' links' + checking + '</span>',
+                p ? '<span class="summary-pill pill-pass">✅ ' + p + ' OK ▼</span>' : '',
+                w ? '<span class="summary-pill pill-warn">⚠️ ' + w + ' warnings ▼</span>' : '',
+                f ? '<span class="summary-pill pill-fail">❌ ' + f + ' failed ▼</span>' : ''
+            ].join('');
+        }
+
+        // lcBuildAccordions — after all checks done, reorganise results into collapsible groups
+        function lcBuildAccordions(listDiv, sumDiv, ordered, cats, evCount, genCount) {
+            const p = cats.pass.length, w = cats.warn.length, f = cats.fail.length;
+            const total = ordered.length;
+
+            // Collect rendered card HTML per index
+            const cardHTML = {};
+            listDiv.querySelectorAll('[id^="lc-"]').forEach(el => {
+                const i = parseInt(el.id.replace('lc-',''));
+                cardHTML[i] = el.innerHTML;
+            });
+
+            // Clear list
+            listDiv.innerHTML = '';
+
+            // Helper to make an accordion group
+            function makeGroup(label, indices, startOpen) {
+                if (!indices.length) return;
+                const group = document.createElement('div');
+                group.className = 'results-group';
+
+                const hdr = document.createElement('div');
+                hdr.className = 'results-group-header' + (startOpen ? ' open' : '');
+                hdr.innerHTML = '<span>' + label + '</span><span class="results-group-chevron">▼</span>';
+
+                const body = document.createElement('div');
+                body.className = 'results-group-body' + (startOpen ? ' open' : '');
+                indices.forEach(i => {
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = cardHTML[i] || '';
+                    body.appendChild(wrapper);
+                });
+
+                hdr.onclick = function() {
+                    const isOpen = body.classList.contains('open');
+                    body.classList.toggle('open', !isOpen);
+                    hdr.classList.toggle('open', !isOpen);
+                };
+
+                group.appendChild(hdr);
+                group.appendChild(body);
+                listDiv.appendChild(group);
+            }
+
+            // Event links section
+            const evIndices = Array.from({length: evCount}, (_,i) => i);
+            const genIndices = Array.from({length: ordered.length - evCount}, (_,i) => i + evCount);
+
+            // Split event indices by status
+            const evPass = evIndices.filter(i => cats.pass.includes(i));
+            const evFail = evIndices.filter(i => cats.fail.includes(i) || cats.warn.includes(i));
+            const genPass = genIndices.filter(i => cats.pass.includes(i));
+            const genFail = genIndices.filter(i => cats.fail.includes(i) || cats.warn.includes(i));
+
+            // Section: Voter Drive RSVP Links
+            if (evIndices.length) {
+                const evHdr = document.createElement('div');
+                evHdr.className = 'section-heading';
+                evHdr.textContent = '🗓️ Voter Drive RSVP Links (' + evIndices.length + ')';
+                listDiv.appendChild(evHdr);
+                // Failed first (open), then OK (collapsed)
+                if (evFail.length) makeGroup('❌ ' + evFail.length + ' failed ▼', evFail, true);
+                if (evPass.length) makeGroup('✅ ' + evPass.length + ' OK ▼', evPass, false);
+            }
+
+            // Section: Other Links
+            if (genIndices.length) {
+                const genHdr = document.createElement('div');
+                genHdr.className = 'section-heading';
+                genHdr.textContent = '🔗 Other Links (' + genIndices.length + ')';
+                listDiv.appendChild(genHdr);
+                if (genFail.length) makeGroup('❌ ' + genFail.length + ' failed ▼', genFail, true);
+                if (genPass.length) makeGroup('✅ ' + genPass.length + ' OK ▼', genPass, false);
+            }
+
+            // Update summary pills to be clickable toggles
+            lcRenderPills(sumDiv, total, total, cats);
         }
 
     </script>
