@@ -819,7 +819,14 @@
                             if(!lOk) allOk=false;
                         }
                     } else {
-                        result.checks.push({field:'DateTime', icon:'ℹ️', listed:'(no newsletter text found to compare)', actual:dt.full, ok:null});
+                        // contextText exists but couldn't be parsed — likely "at various times" or unusual format
+                        const hasCtx = contextText && contextText.trim().length > 10;
+                        if (hasCtx) {
+                            result.checks.push({field:'DateTime', icon:'⚠️', listed:'Could not parse time from newsletter text — check manually', actual:dt.full, ok:false});
+                            allOk = false;
+                        } else {
+                            result.checks.push({field:'DateTime', icon:'ℹ️', listed:'(no newsletter text found to compare)', actual:dt.full, ok:null});
+                        }
                         const loc=ev.location;
                         result.checks.push({field:'Location', icon:'ℹ️', listed:'', actual:(loc&&loc.locality)?(loc.region+' ('+loc.locality.toUpperCase()+')') : '💻 Virtual event', ok:null});
                     }
@@ -830,27 +837,124 @@
                 return result;
             }
 
-            // General link check — route through server to avoid CORS/http-block issues
+            // General link check — fetch page content then use AI to verify it matches newsletter context
+            // Memory helpers
+            const MEM_KEY = 'blurbinator_approved_links_v1';
+            function memLoad() { try { return JSON.parse(localStorage.getItem(MEM_KEY)||'{}'); } catch(e){ return {}; } }
+            function memSave(m) { try { localStorage.setItem(MEM_KEY, JSON.stringify(m)); } catch(e){} }
+
+            // Check memory first — if this href was previously approved, auto-pass
+            const mem = memLoad();
+            if (mem[href]) {
+                result.status='pass'; result.icon='✅'; result.message='Approved (remembered)';
+                result.checks.push({field:'Memory', icon:'✅', listed:'Previously approved as: '+mem[href], actual:'', ok:true});
+                result.remembered = true;
+                return result;
+            }
+
+            // Fetch the page
+            let pageHtml='', fetchStatus=0, finalUrl='';
             try {
                 const chkRes = await fetch('/.netlify/functions/fetch-proof', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({url: href}),
-                    signal: AbortSignal.timeout(12000)
+                    signal: AbortSignal.timeout(15000)
                 });
-                if (chkRes.status !== 404 && chkRes.status < 500) {
-                    result.status='pass'; result.icon='✅'; result.message='Reachable';
-                } else if (chkRes.status === 404) {
-                    result.status='fail'; result.icon='❌'; result.message='404 Not Found';
+                const chkData = await chkRes.json();
+                fetchStatus = chkData.fetchedStatus || 0;
+                finalUrl = chkData.finalUrl || href;
+                pageHtml = chkData.html || '';
+            } catch(e) {
+                result.status='warn'; result.icon='⚠️'; result.message='Could not fetch — check manually';
+                return result;
+            }
+
+            if (fetchStatus === 404) {
+                result.status='fail'; result.icon='❌'; result.message='404 Not Found';
+                return result;
+            }
+            if (fetchStatus >= 500) {
+                result.status='warn'; result.icon='⚠️'; result.message='Server error '+fetchStatus+' — check manually';
+                return result;
+            }
+
+            // Bot-blocked (403/401/0 with no useful HTML) — can't read content
+            const isBlocked = (fetchStatus===403||fetchStatus===401||(fetchStatus===0&&pageHtml.length<500));
+            if (isBlocked) {
+                result.status='warn'; result.icon='⚠️'; result.message='Site blocks automated reading — check manually';
+                return result;
+            }
+
+            // Extract readable text from fetched HTML (title + body text, capped at 2000 chars)
+            let pageText = '';
+            try {
+                const pd = new DOMParser().parseFromString(pageHtml, 'text/html');
+                const title = pd.title || '';
+                // Remove scripts/styles
+                pd.querySelectorAll('script,style,nav,footer,header').forEach(el=>el.remove());
+                const body = (pd.body||pd.documentElement).innerText||pd.body.textContent||'';
+                pageText = (title + '\n' + body).replace(/\s+/g,' ').trim().substring(0,2500);
+            } catch(e) { pageText = ''; }
+
+            if (!pageText || pageText.length < 50) {
+                result.status='warn'; result.icon='⚠️'; result.message='Could not read page content — check manually';
+                return result;
+            }
+
+            // Build AI prompt
+            const newsletterCtx = contextText || linkText || href;
+            const aiPrompt = `You are a proofreader for a political newsletter. A link appears in the newsletter and you must determine if it goes to the correct destination.
+
+NEWSLETTER CONTEXT (the text surrounding this link):
+${newsletterCtx.substring(0,600)}
+
+LINK TEXT: "${linkText}"
+LINK URL: ${href}
+
+PAGE CONTENT at that URL:
+${pageText}
+
+Answer in this exact JSON format (no other text):
+{"correct": true/false, "confidence": "high"/"medium"/"low", "reason": "one sentence explanation"}`;
+
+            try {
+                const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 150,
+                        messages: [{role:'user', content: aiPrompt}]
+                    })
+                });
+                const aiData = await aiRes.json();
+                const raw = (aiData.content&&aiData.content[0]&&aiData.content[0].text)||'';
+                let verdict;
+                try { verdict = JSON.parse(raw.replace(/```json|```/g,'')); } catch(e){ verdict=null; }
+
+                if (!verdict) {
+                    result.status='warn'; result.icon='⚠️'; result.message='AI check inconclusive — check manually';
+                    return result;
+                }
+
+                if (verdict.correct) {
+                    result.status='pass'; result.icon='✅';
+                    result.message = verdict.confidence==='high' ? 'AI: Correct destination' : 'AI: Likely correct ('+verdict.confidence+' confidence)';
+                    result.checks.push({field:'AI Check', icon:'✅', listed:newsletterCtx.substring(0,80), actual:verdict.reason, ok:true});
+                    // Offer to remember — store pending approval keyed by index, rendered later
+                    result.aiVerified = true;
+                    result.aiReason = verdict.reason;
+                    result.aiConfidence = verdict.confidence;
                 } else {
-                    result.status='warn'; result.icon='⚠️'; result.message='Server error ' + chkRes.status + ' — check manually';
+                    result.status = verdict.confidence==='high' ? 'fail' : 'warn';
+                    result.icon = verdict.confidence==='high' ? '❌' : '⚠️';
+                    result.message = 'AI: Wrong destination — ' + verdict.reason;
+                    result.checks.push({field:'AI Check', icon:'❌', listed:newsletterCtx.substring(0,80), actual:verdict.reason, ok:false});
                 }
             } catch(e) {
-                if (e.name==='AbortError'||e.name==='TimeoutError') {
-                    result.status='warn'; result.icon='⚠️'; result.message='Timed out — check manually';
-                } else {
-                    result.status='warn'; result.icon='⚠️'; result.message='Could not verify — check manually';
-                }
+                // AI call failed (e.g. no extension) — fall back to reachability
+                result.status='pass'; result.icon='✅'; result.message='Reachable (AI unavailable)';
             }
             return result;
         }
@@ -867,6 +971,10 @@
                 </div>`).join('')}</div>` : '';
             const title = r.eventTitle ? escH(r.eventTitle) : (r.linkText ? escH(r.linkText) : '');
             const shortUrl = r.href.length>72 ? r.href.substring(0,69)+'...' : r.href;
+            // "Always approve" button for AI-verified links (not already remembered)
+            const rememberBtn = (r.aiVerified && !r.remembered)
+                ? `<div style="padding:8px 16px 12px 46px;"><button onclick="lcRememberLink('${escH(r.href)}','${escH((r.linkText||r.href).replace(/'/g,''))}',this)" style="background:#02013C;color:white;border:none;padding:6px 14px;border-radius:6px;font-family:Raleway,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">💾 Always approve this link</button></div>`
+                : '';
             return `<div class="result-card ${r.status}">
                 <div class="result-header">
                     <span class="result-icon">${r.icon}</span>
@@ -876,7 +984,21 @@
                         <div class="result-url"><a href="${escH(r.href)}" target="_blank" style="color:inherit;text-decoration:underline;word-break:break-all;">${escH(shortUrl)}</a></div>
                     </div>
                     <div class="result-status">${escH(r.message)}</div>
-                </div>${checks}</div>`;
+                </div>${checks}${rememberBtn}</div>`;
+        }
+
+        function lcRememberLink(href, label, btnEl) {
+            const MEM_KEY = 'blurbinator_approved_links_v1';
+            try {
+                const mem = JSON.parse(localStorage.getItem(MEM_KEY)||'{}');
+                mem[href] = label || href;
+                localStorage.setItem(MEM_KEY, JSON.stringify(mem));
+                btnEl.textContent = '✅ Remembered!';
+                btnEl.disabled = true;
+                btnEl.style.opacity = '0.6';
+            } catch(e) {
+                btnEl.textContent = '❌ Could not save';
+            }
         }
 
         async function runLinkCheck() {
