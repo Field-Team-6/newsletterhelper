@@ -825,7 +825,9 @@
                     body: JSON.stringify({url: href}),
                     signal: AbortSignal.timeout(12000)
                 });
-                const s = chkRes.status;
+                // fetch-proof always returns HTTP 200; actual upstream status is in fetchedStatus
+                const data = await chkRes.json();
+                const s = data.fetchedStatus || 0;
                 if (s === 404) {
                     result.status='fail'; result.icon='❌'; result.message='404 Not Found';
                 } else if (s >= 200 && s < 500) {
@@ -836,7 +838,6 @@
                         result.checks.push({field:'Note', icon:'⚠️', listed:'', actual:'Site is up but blocks automated access (' + s + '). Confirm manually.', ok:null});
                     } else {
                         try {
-                            const data = await chkRes.json();
                             if (data && data.html) {
                                 const parser = new DOMParser();
                                 const doc = parser.parseFromString(data.html, 'text/html');
