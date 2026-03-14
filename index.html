@@ -3,31 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voter Drive List Generator</title>
+    <title>BLURBINATOR – Field Team 6</title>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@700;800;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #02013C;
             min-height: 100vh;
-            padding: 48px 20px;
+            padding: 48px 20px 64px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        /* ── Top header: BLURBINATOR ── */
-        .site-header {
-            text-align: center;
-            margin-bottom: 36px;
-        }
-
+        /* ── Masthead ── */
+        .site-header { text-align: center; margin-bottom: 36px; }
         .site-title {
             font-family: 'Raleway', sans-serif;
             font-weight: 900;
@@ -36,7 +28,6 @@
             color: #FFA703;
             line-height: 1;
         }
-
         .site-subtitle {
             font-family: 'Raleway', sans-serif;
             font-weight: 800;
@@ -46,14 +37,15 @@
             letter-spacing: 0.5px;
         }
 
-        /* ── Tool card ── */
+        /* ── Tool cards ── */
         .container {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             max-width: 900px;
             width: 100%;
             padding: 40px;
+            margin-bottom: 28px;
         }
 
         .tool-title {
@@ -62,122 +54,6 @@
             color: #02013C;
             margin-bottom: 20px;
             font-size: 24px;
-        }
-
-
-        /* Generate button */
-        .generate-btn {
-            background: #FFA703;
-            color: #02013C;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 8px;
-            font-family: 'Raleway', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 12px rgba(255, 167, 3, 0.4);
-        }
-
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(255, 167, 3, 0.6);
-        }
-
-        .generate-btn:active {
-            transform: translateY(0);
-        }
-
-        .generate-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .output-section {
-            margin-top: 32px;
-            display: none;
-        }
-
-        .output-section.visible {
-            display: block;
-        }
-
-        .output-box {
-            background: #f7fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 16px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            max-height: 400px;
-            overflow-y: auto;
-            color: #2d3748;
-        }
-
-        .output-box p {
-            margin: 2px 0;
-        }
-
-        .output-box a {
-            color: #02013C;
-            font-weight: 600;
-            text-decoration: underline;
-        }
-
-        .output-box a:hover {
-            color: #FFA703;
-        }
-
-        .copy-button {
-            background: #48bb78;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
-        }
-
-        .copy-button:hover {
-            background: #38a169;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
-        }
-
-        .copy-button:active {
-            transform: translateY(0);
-        }
-
-        .loading {
-            display: inline-block;
-            margin-left: 8px;
-        }
-
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s steps(4, end) infinite;
-        }
-
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
-        }
-
-        .error {
-            background: #fff5f5;
-            border: 2px solid #fc8181;
-            color: #c53030;
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 16px;
         }
 
         .info {
@@ -192,45 +68,148 @@
             color: #2c5282;
         }
 
+        /* ── Buttons ── */
+        .generate-btn {
+            background: #FFA703;
+            color: #02013C;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(255,167,3,0.4);
+        }
+        .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(255,167,3,0.6); }
+        .generate-btn:active { transform: translateY(0); }
+        .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .copy-button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(72,187,120,0.3);
+        }
+        .copy-button:hover { background: #38a169; transform: translateY(-2px); }
+        .copy-button:active { transform: translateY(0); }
+
+        /* ── Output areas ── */
+        .output-section { margin-top: 32px; display: none; }
+        .output-section.visible { display: block; }
+
+        .output-box {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #2d3748;
+        }
+        .output-box p { margin: 2px 0; }
+        .output-box a { color: #02013C; font-weight: 600; text-decoration: underline; }
+        .output-box a:hover { color: #FFA703; }
+
+        /* Single-line output box for postcarding states */
+        .output-box-single {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #2d3748;
+            word-break: break-word;
+        }
+
         .count {
             font-weight: 600;
             color: #02013C;
             margin-top: 16px;
             font-size: 14px;
         }
+
+        .error {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            color: #c53030;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .loading { display: inline-block; margin-left: 8px; }
+        .loading::after { content: '...'; animation: dots 1.5s steps(4,end) infinite; }
+        @keyframes dots {
+            0%,20% { content: '.'; }
+            40% { content: '..'; }
+            60%,100% { content: '...'; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- BLURBINATOR masthead, lives above the white card -->
     <div class="site-header">
         <div class="site-title">BLURBINATOR</div>
         <div class="site-subtitle">Multi-Tool to Help Build the Field Team 6 Weekly</div>
     </div>
 
+    <!-- ── TOOL 1: Voter Drive List ── -->
     <div class="container">
         <h2 class="tool-title">🗳️ Voter Drive List Generator</h2>
-
         <div class="info">
             Fetches all upcoming in-person voter registration drives from Mobilize and formats them ready to paste into your newsletter. Automatically excludes trainings.
         </div>
-
         <button class="generate-btn" id="generateBtn" onclick="generateEventList()">
             Generate Voter Drive List
         </button>
-
         <div id="output" class="output-section">
             <div class="count" id="eventCount"></div>
             <div class="output-box" id="outputText"></div>
-            <button class="copy-button" onclick="copyToClipboard()">
+            <button class="copy-button" onclick="copyVoterDrives(event)">
                 📋 Copy to Clipboard
             </button>
         </div>
+        <div id="error" class="error" style="display:none;"></div>
+    </div>
 
-        <div id="error" class="error" style="display: none;"></div>
+    <!-- ── TOOL 2: Postcarding States ── -->
+    <div class="container">
+        <h2 class="tool-title">📬 Postcarding States Generator</h2>
+        <div class="info">
+            Logs into postcards.fieldteam6.org using your active browser session and reads the current list of states available for postcarding — formatted and ready to paste into the newsletter.
+        </div>
+        <button class="generate-btn" id="postcardBtn" onclick="generatePostcardStates()">
+            Fetch Postcarding States
+        </button>
+        <div id="postcardOutput" class="output-section">
+            <div class="count" id="postcardCount"></div>
+            <div class="output-box-single" id="postcardText"></div>
+            <button class="copy-button" onclick="copyPostcardStates(event)">
+                📋 Copy to Clipboard
+            </button>
+        </div>
+        <div id="postcardError" class="error" style="display:none;"></div>
     </div>
 
     <script>
+        // ════════════════════════════════════════
+        // TOOL 1 – Voter Drive List Generator
+        // ════════════════════════════════════════
         const ORG_ID = 1255;
         const API_BASE = 'https://api.mobilize.us/v1';
 
@@ -241,119 +220,75 @@
             const errorDiv = document.getElementById('error');
             const eventCount = document.getElementById('eventCount');
 
-            // Reset
             output.classList.remove('visible');
             errorDiv.style.display = 'none';
             btn.disabled = true;
             btn.innerHTML = 'Fetching events<span class="loading"></span>';
 
             try {
-                const url = `${API_BASE}/organizations/${ORG_ID}/events?` +
-                    `timeslot_start=gte_now&` +
-                    `event_types=VOTER_REG&` +
-                    `per_page=100`;
-
+                const url = `${API_BASE}/organizations/${ORG_ID}/events?timeslot_start=gte_now&event_types=VOTER_REG&per_page=100`;
                 const response = await fetch(url);
-
-                if (!response.ok) {
-                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
-                }
-
+                if (!response.ok) throw new Error(`API returned ${response.status}: ${response.statusText}`);
                 const data = await response.json();
+                if (!data.data || data.data.length === 0) throw new Error('No upcoming voter registration events found');
 
-                if (!data.data || data.data.length === 0) {
-                    throw new Error('No upcoming voter registration events found');
-                }
-
-                // Filter and format events
                 const events = data.data
-                    .filter(event => {
-                        const title = event.title.toLowerCase();
-                        return !title.includes('training');
-                    })
-                    .filter(event => !event.is_virtual)
-                    .filter(event => event.location && event.location.locality && event.location.region)
+                    .filter(e => !e.title.toLowerCase().includes('training'))
+                    .filter(e => !e.is_virtual)
+                    .filter(e => e.location && e.location.locality && e.location.region)
                     .map(event => {
                         const now = Math.floor(Date.now() / 1000);
                         const futureTimeslots = event.timeslots
                             .filter(ts => ts.start_date > now)
                             .sort((a, b) => a.start_date - b.start_date);
-
                         if (futureTimeslots.length === 0) return null;
 
                         const timeslot = futureTimeslots[0];
                         const date = new Date(timeslot.start_date * 1000);
-
                         const state = event.location.region;
                         const city = event.location.locality.toUpperCase();
-
-                        // Use the event's own timezone so the time matches what's on Mobilize
                         const tz = event.timezone || 'America/New_York';
 
-                        const localParts = new Intl.DateTimeFormat('en-US', {
-                            timeZone: tz,
-                            weekday: 'long',
-                            month: 'numeric',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
+                        const parts = new Intl.DateTimeFormat('en-US', {
+                            timeZone: tz, weekday: 'long', month: 'numeric',
+                            day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
                         }).formatToParts(date);
 
-                        const get = type => localParts.find(p => p.type === type)?.value ?? '';
-                        const dayName = get('weekday');
-                        const month = get('month');
-                        const day = get('day');
-                        let hours = parseInt(get('hour'), 10);
+                        const get = t => parts.find(p => p.type === t)?.value ?? '';
+                        const hours = parseInt(get('hour'), 10);
                         const minutes = parseInt(get('minute'), 10);
                         const ampm = get('dayPeriod').toLowerCase().startsWith('p') ? 'p' : 'a';
-
-                        const timeStr = minutes === 0
-                            ? `${hours}${ampm}`
-                            : `${hours}:${minutes.toString().padStart(2, '0')}${ampm}`;
-
-                        // Detect NO KINGS tag from event title
+                        const timeStr = minutes === 0 ? `${hours}${ampm}` : `${hours}:${minutes.toString().padStart(2,'0')}${ampm}`;
                         const noKings = event.title.toLowerCase().includes('no kings') ? ' (NO KINGS)' : '';
-
                         const eventUrl = event.browser_url;
 
                         return {
                             date: timeslot.start_date,
-                            text: `${state} (${city}) – ${dayName}, ${month}/${day}${noKings} at ${timeStr}. RSVP HERE.`,
-                            html: `${state} (${city}) – ${dayName}, ${month}/${day}${noKings} at ${timeStr}. RSVP <a href="${eventUrl}" target="_blank">HERE</a>.`,
-                            url: eventUrl
+                            text: `${state} (${city}) – ${get('weekday')}, ${get('month')}/${get('day')}${noKings} at ${timeStr}. RSVP HERE.`,
+                            html: `${state} (${city}) – ${get('weekday')}, ${get('month')}/${get('day')}${noKings} at ${timeStr}. RSVP <a href="${eventUrl}" target="_blank">HERE</a>.`,
                         };
                     })
-                    .filter(event => event !== null)
+                    .filter(Boolean)
                     .sort((a, b) => a.date - b.date);
 
-                if (events.length === 0) {
-                    throw new Error('No qualifying events found after filtering');
-                }
+                if (events.length === 0) throw new Error('No qualifying events found after filtering');
 
-                // Render display version with clickable links
                 outputText.innerHTML = events.map(e => `<p>• ${e.html}</p>`).join('\n');
-
-                // Plain text for fallback
                 outputText.dataset.plaintext = events.map(e => `• ${e.text}`).join('\n');
 
-                // Rich HTML styled to match FT6 Constant Contact newsletter:
-                // 16pt Arial, dark blue (#1f3864), underlined hotlinks
                 const styledItems = events.map(e =>
-                    `<p style="font-family: Arial, sans-serif; font-size: 16px; color: #1f3864; margin: 4px 0;">` +
-                    `• ${e.html.replace(
-                        /<a href="([^"]+)" target="_blank">HERE<\/a>/,
-                        `<a href="$1" style="color: #1f3864; text-decoration: underline; font-family: Arial, sans-serif; font-size: 16px;">HERE</a>`
-                    )}</p>`
+                    `<p style="font-family:Arial,sans-serif;font-size:16px;color:#1f3864;margin:4px 0;">• ${
+                        e.html.replace(/<a href="([^"]+)" target="_blank">HERE<\/a>/,
+                        `<a href="$1" style="color:#1f3864;text-decoration:underline;font-family:Arial,sans-serif;font-size:16px;">HERE</a>`)
+                    }</p>`
                 ).join('\n');
-                outputText.dataset.htmltext = `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #1f3864;">${styledItems}</div>`;
+                outputText.dataset.htmltext = `<div style="font-family:Arial,sans-serif;font-size:16px;color:#1f3864;">${styledItems}</div>`;
 
                 eventCount.textContent = `Found ${events.length} upcoming voter drive${events.length !== 1 ? 's' : ''}`;
                 output.classList.add('visible');
 
-            } catch (error) {
-                console.error('Error:', error);
-                errorDiv.textContent = `Error: ${error.message}. Try refreshing the page or contact jason@fieldteam6.org if this persists.`;
+            } catch (err) {
+                errorDiv.textContent = `Error: ${err.message}. Try refreshing or contact jason@fieldteam6.org.`;
                 errorDiv.style.display = 'block';
             } finally {
                 btn.disabled = false;
@@ -361,27 +296,115 @@
             }
         }
 
-        function copyToClipboard() {
+        function copyVoterDrives(e) {
             const outputText = document.getElementById('outputText');
-            const htmlContent = outputText.dataset.htmltext;
-            const plainText = outputText.dataset.plaintext;
+            richCopy(outputText.dataset.htmltext, outputText.dataset.plaintext, e.target);
+        }
+
+        // ════════════════════════════════════════
+        // TOOL 2 – Postcarding States Generator
+        // ════════════════════════════════════════
+        async function generatePostcardStates() {
+            const btn = document.getElementById('postcardBtn');
+            const output = document.getElementById('postcardOutput');
+            const outputText = document.getElementById('postcardText');
+            const errorDiv = document.getElementById('postcardError');
+            const countDiv = document.getElementById('postcardCount');
+
+            output.classList.remove('visible');
+            errorDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = 'Fetching states<span class="loading"></span>';
 
             try {
-                const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
-                const textBlob = new Blob([plainText], { type: 'text/plain' });
-                const item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
+                // Fetch the select_campaign page using the existing browser session
+                const response = await fetch('https://postcards.fieldteam6.org/select_campaign', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error(`Site returned ${response.status}. Are you logged in?`);
+
+                const html = await response.text();
+
+                // Parse the HTML and extract campaign option text
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const options = Array.from(doc.querySelectorAll('select option'))
+                    .map(o => o.textContent.trim())
+                    .filter(t => t.length > 0);
+
+                if (options.length === 0) {
+                    throw new Error('No campaigns found. You may need to log in at postcards.fieldteam6.org first.');
+                }
+
+                // Extract unique 2-letter state abbreviations from campaign names
+                // Campaign names look like: "AZ-01 - Voter Registration Outreach - ..."
+                //                       or: "GA Senate - Voter Registration Outreach - ..."
+                //                       or: "NC Senate In-State Postmark ..."
+                const stateSet = new Set();
+                options.forEach(text => {
+                    const match = text.match(/^([A-Z]{2})[\s\-]/);
+                    if (match) stateSet.add(match[1]);
+                });
+
+                if (stateSet.size === 0) throw new Error('Could not parse state names from campaign list.');
+
+                const states = Array.from(stateSet).sort();
+
+                // Format exactly as it appears in the newsletter:
+                // "...for crucial 2026 elections in AZ, CO, GA, IA, ME, NC, NE, NJ, NY, and PA!"
+                const stateList = states.length === 1
+                    ? states[0]
+                    : states.slice(0, -1).join(', ') + ', and ' + states[states.length - 1];
+
+                const blurb = `...for crucial 2026 elections in ${stateList}!`;
+
+                outputText.textContent = blurb;
+                outputText.dataset.plaintext = blurb;
+                outputText.dataset.htmltext = `<p style="font-family:Arial,sans-serif;font-size:16px;color:#1f3864;">${blurb}</p>`;
+
+                countDiv.textContent = `${states.length} states currently active: ${states.join(', ')}`;
+                output.classList.add('visible');
+
+            } catch (err) {
+                // CORS fallback message
+                if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
+                    errorDiv.innerHTML = `Could not reach postcards.fieldteam6.org directly (CORS restriction). 
+                        Please make sure you're <a href="https://postcards.fieldteam6.org" target="_blank" style="color:#c53030;">logged in here</a> 
+                        and try again.`;
+                } else {
+                    errorDiv.textContent = `Error: ${err.message}`;
+                }
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Fetch Postcarding States';
+            }
+        }
+
+        function copyPostcardStates(e) {
+            const outputText = document.getElementById('postcardText');
+            richCopy(outputText.dataset.htmltext, outputText.dataset.plaintext, e.target);
+        }
+
+        // ════════════════════════════════════════
+        // Shared rich-copy helper
+        // ════════════════════════════════════════
+        function richCopy(htmlContent, plainText, btnEl) {
+            const originalText = btnEl.textContent;
+            try {
+                const item = new ClipboardItem({
+                    'text/html': new Blob([htmlContent], { type: 'text/html' }),
+                    'text/plain': new Blob([plainText], { type: 'text/plain' })
+                });
                 navigator.clipboard.write([item]).then(() => {
-                    const btn = event.target;
-                    const originalText = btn.textContent;
-                    btn.textContent = '✅ Copied with live links!';
-                    setTimeout(() => { btn.textContent = originalText; }, 2500);
+                    btnEl.textContent = '✅ Copied with live links!';
+                    setTimeout(() => { btnEl.textContent = originalText; }, 2500);
                 });
             } catch (e) {
                 navigator.clipboard.writeText(plainText).then(() => {
-                    const btn = event.target;
-                    const originalText = btn.textContent;
-                    btn.textContent = '✅ Copied (plain text)';
-                    setTimeout(() => { btn.textContent = originalText; }, 2500);
+                    btnEl.textContent = '✅ Copied!';
+                    setTimeout(() => { btnEl.textContent = originalText; }, 2500);
                 });
             }
         }
