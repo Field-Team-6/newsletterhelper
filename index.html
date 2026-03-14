@@ -738,7 +738,7 @@
         }
 
         function lcLabelFor(type) {
-            return type==='mobilize-event'?'📅 Voter Drive Event':type==='actblue'?'💙 ActBlue Donation':type==='ft6'?'🏠 FieldTeam6.org':type==='zoom'?'💻 Zoom Event':'🔗 Link';
+            return type==='mobilize-event'?'Mobes Event':type==='actblue'?'💙 ActBlue Donation':type==='ft6'?'🏠 FieldTeam6.org':type==='zoom'?'💻 Zoom Event':'🔗 Link';
         }
 
         function lcExtractLinks(html) {
@@ -817,7 +817,7 @@
                 return result;
             }
 
-            // General link check — route through server to avoid CORS/http-block issues
+            // General link check -- fetch server-side, extract page title + snippet
             try {
                 const chkRes = await fetch('/.netlify/functions/fetch-proof', {
                     method: 'POST',
@@ -825,12 +825,32 @@
                     body: JSON.stringify({url: href}),
                     signal: AbortSignal.timeout(12000)
                 });
-                if (chkRes.status !== 404 && chkRes.status < 500) {
-                    result.status='pass'; result.icon='✅'; result.message='Reachable';
-                } else if (chkRes.status === 404) {
+                const s = chkRes.status;
+                if (s === 404) {
                     result.status='fail'; result.icon='❌'; result.message='404 Not Found';
+                } else if (s >= 200 && s < 500) {
+                    result.status='pass'; result.icon='✅';
+                    if (s === 400 || s === 401 || s === 403) {
+                        // Bot-blocked: server IS reachable, just won't serve us content
+                        result.message='Reachable (anti-bot protection active)';
+                        result.checks.push({field:'Note', icon:'⚠️', listed:'', actual:'Site is up but blocks automated access (' + s + '). Confirm manually.', ok:null});
+                    } else {
+                        try {
+                            const data = await chkRes.json();
+                            if (data && data.html) {
+                                const parser = new DOMParser();
+                                const doc = parser.parseFromString(data.html, 'text/html');
+                                const title = (doc.querySelector('title') || {textContent:''}).textContent.trim();
+                                const paras = [...doc.querySelectorAll('h1,h2,h3,p')];
+                                const snippet = paras.map(p => p.textContent.replace(/\s+/g,' ').trim()).filter(t => t.length > 15).slice(0,2).join(' • ').substring(0,160);
+                                result.message = 'Reachable';
+                                if (title) result.checks.push({field:'Page title', icon:'ℹ️', listed:'', actual:title, ok:null});
+                                if (snippet) result.checks.push({field:'Content', icon:'ℹ️', listed:'', actual:snippet + (snippet.length >= 159 ? '…' : ''), ok:null});
+                            } else { result.message='Reachable'; }
+                        } catch(_) { result.message='Reachable'; }
+                    }
                 } else {
-                    result.status='warn'; result.icon='⚠️'; result.message='Server error ' + chkRes.status + ' — check manually';
+                    result.status='warn'; result.icon='⚠️'; result.message='Server error ' + s + ' — check manually';
                 }
             } catch(e) {
                 if (e.name==='AbortError'||e.name==='TimeoutError') {
@@ -838,6 +858,7 @@
                 } else {
                     result.status='warn'; result.icon='⚠️'; result.message='Could not verify — check manually';
                 }
+            }
             }
             return result;
         }
@@ -910,7 +931,7 @@
                 if (evLinks.length>0) {
                     const h=document.createElement('div');
                     h.className='section-heading';
-                    h.textContent='🗓️ Voter Drive RSVP Links ('+evLinks.length+')';
+                    h.textContent='🗓️ Mobes RSVP Links ('+evLinks.length+')';
                     listDiv.appendChild(h);
                 }
                 ordered.forEach((l,i) => {
@@ -1030,7 +1051,7 @@
             if (evIndices.length) {
                 const evHdr = document.createElement('div');
                 evHdr.className = 'section-heading';
-                evHdr.textContent = '🗓️ Voter Drive RSVP Links (' + evIndices.length + ')';
+                evHdr.textContent = '🗓️ Mobes RSVP Links (' + evIndices.length + ')';
                 listDiv.appendChild(evHdr);
                 // Failed first (open), then OK (collapsed)
                 if (evFail.length) makeGroup('❌ ' + evFail.length + ' failed', evFail, true);
