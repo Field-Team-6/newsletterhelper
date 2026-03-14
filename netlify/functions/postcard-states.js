@@ -23,7 +23,7 @@ exports.handler = async function(event, context) {
         const loginPageHtml = await loginPageRes.text();
 
         // Extract CSRF token from <meta name="csrf-token" content="...">
-        const csrfMatch = loginPageHtml.match(/name="csrf-token"\s+content="([^"]+)"/);
+                const csrfMatch = loginPageHtml.match(/name="csrf-token"\s+content="([^"]+)"/) || loginPageHtml.match(/content="([^"]+)"\s+name="csrf-token"/) || loginPageHtml.match(/name="authenticity_token"\s+value="([^"]+)"/) || loginPageHtml.match(/value="([^"]+)"\s+name="authenticity_token"/) || loginPageHtml.match(/authenticity_token[^>]+value="([^"]+)"/);
         if (!csrfMatch) {
             return {
                 statusCode: 500,
