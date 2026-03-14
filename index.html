@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FT6 Event List Generator</title>
+    <title>Voter Drive List Generator</title>
     <style>
         * {
             margin: 0;
@@ -163,7 +163,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🗳️ Field Team 6 Event List Generator</h1>
+        <h1>🗳️ Voter Drive List Generator</h1>
         <p class="subtitle">Generate formatted voter drive event listings for your newsletter</p>
 
         <div class="info">
@@ -300,7 +300,17 @@
                 outputText.innerHTML = events.map(e => `<p>• ${e.html}</p>`).join('\n');
                 // Store plain text version for clipboard fallback
                 outputText.dataset.plaintext = events.map(e => `• ${e.text}`).join('\n');
-                outputText.dataset.htmltext = `<ul style="list-style:none;padding:0;">${events.map(e => `<li>• ${e.html}</li>`).join('')}</ul>`;
+
+                // Rich HTML styled to match the FT6 Constant Contact newsletter exactly:
+                // 16pt Arial, dark blue (#1f3864), bullet points, underlined hotlinks
+                const styledItems = events.map(e =>
+                    `<p style="font-family: Arial, sans-serif; font-size: 16px; color: #1f3864; margin: 4px 0;">` +
+                    `• ${e.html.replace(
+                        /<a href="([^"]+)" target="_blank">HERE<\/a>/,
+                        `<a href="$1" style="color: #1f3864; text-decoration: underline; font-family: Arial, sans-serif; font-size: 16px;">HERE</a>`
+                    )}</p>`
+                ).join('\n');
+                outputText.dataset.htmltext = `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #1f3864;">${styledItems}</div>`;
                 eventCount.textContent = `Found ${events.length} upcoming voter drive${events.length !== 1 ? 's' : ''}`;
                 output.classList.add('visible');
 
