@@ -1345,17 +1345,6 @@ Answer in this exact JSON format (no other text):
         // TOOL 4 – Proofread Newsletter
         // ════════════════════════════════════════
 
-        // Auto-fill URL from Tool 3 when card opens
-        const _origToggle = toggleCard;
-        toggleCard = function(id) {
-            _origToggle(id);
-            if (id === 'proofread') {
-                const src = document.getElementById('proofUrl');
-                const dst = document.getElementById('proofreadUrl');
-                if (src && dst && src.value && !dst.value) dst.value = src.value;
-            }
-        };
-
         async function runProofread() {
             const btn = document.getElementById('proofreadBtn');
             const errDiv = document.getElementById('proofreadError');
@@ -1369,7 +1358,11 @@ Answer in this exact JSON format (no other text):
             btn.innerHTML = 'Fetching newsletter<span class="loading"></span>';
 
             try {
-                const url = document.getElementById('proofreadUrl').value.trim();
+                // Auto-fill from Tool 3 if empty
+                const src = document.getElementById('proofUrl');
+                const dst = document.getElementById('proofreadUrl');
+                if (src && src.value && dst && !dst.value) dst.value = src.value;
+                const url = dst.value.trim();
                 if (!url) throw new Error('Please enter a newsletter proof URL.');
 
                 // Fetch the newsletter HTML
