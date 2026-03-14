@@ -1421,20 +1421,18 @@ Answer in this exact JSON format (no other text):
                     }
                 });
 
-                // Extract font/style audit: look for inline styles on text elements
+                // Extract font/style audit: ONLY flag <p> body text with wrong inline styles
                 const styleAudit = [];
-                rawDoc.querySelectorAll('p,td,div,span,li').forEach(el => {
+                rawDoc.querySelectorAll('p').forEach(el => {
+                    if (el.closest('header,footer,nav,[role="banner"],[role="contentinfo"]')) return;
                     const style = el.getAttribute('style') || '';
-                    const text = el.textContent.trim().substring(0,60);
-                    if (!text || text.length < 5) return;
-                    const hasFont = style.includes('font');
-                    if (hasFont) {
-                        const badFont = !style.includes('Arial') && !style.includes('arial');
-                        const badSize = style.includes('font-size') && !style.includes('16px') && !style.includes('font-size:16') && !style.includes('font-size: 16');
-                        const badColor = style.includes('color') && !style.includes('#1f3864') && !style.includes('rgb(31, 56, 100)');
-                        if (badFont || badSize || badColor) {
-                            styleAudit.push({text, style: style.substring(0,120), badFont, badSize, badColor});
-                        }
+                    const text = el.textContent.trim();
+                    if (!text || text.length < 20 || !style.includes('font')) return;
+                    const badFont = style.includes('font-family') && !style.includes('Arial') && !style.includes('arial');
+                    const badSize = style.includes('font-size') && !style.includes('16px') && !style.includes('font-size:16') && !style.includes('font-size: 16');
+                    const badColor = style.includes('color') && !style.includes('#1f3864') && !style.includes('rgb(31, 56, 100)') && !style.includes('rgb(31,56,100)');
+                    if (badFont || badSize || badColor) {
+                        styleAudit.push({text: text.substring(0,60), style: style.substring(0,120), badFont, badSize, badColor});
                     }
                 });
 
@@ -1465,7 +1463,7 @@ Respond ONLY with a JSON array of issues. Each issue object must have:
 - "fix": the corrected version of just the offending text
 - "copyText": what the user should paste into Constant Contact. Rules:
   * DOUBLE SPACE: the full corrected surrounding sentence (extra space removed) for find-and-replace — include enough context to be unique
-  * HOTLINK: the full corrected sentence as plain text with punctuation moved outside the link
+  * HOTLINK: ONLY the single sentence containing the link, corrected as plain text. The punctuation (period/comma/etc) should appear after the link text, not inside it. Example: if the issue is "Email me HERE," inside the link, the copyText should be just "Email me HERE." — the sentence containing the link only, not surrounding paragraphs or attribution lines
   * TYPO/CAPITALIZATION/NAME/HYPHENATION: just the corrected word or short phrase
   * PROFANITY/FONT: set to null
 If NO issues found return []. Return ONLY the JSON array, no other text.`;
@@ -1588,8 +1586,10 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
                     if (card) {
                         card.style.opacity = '0.4';
                         card.style.pointerEvents = 'none';
-                        btnEl.textContent = '✅ Ignored! Live in ~60s';
                     }
+                    btnEl.textContent = '✅ Ignored! Live in ~60s';
+                    btnEl.style.color = '#276749';
+                    btnEl.style.borderColor = '#276749';
                 } else { throw new Error(data.error || 'Unknown error'); }
             } catch(e) {
                 btnEl.textContent = '❌ ' + e.message;
