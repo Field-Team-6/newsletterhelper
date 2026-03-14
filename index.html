@@ -276,13 +276,16 @@
                         const timeStr = minutes === 0
                             ? `${hours}${ampm}`
                             : `${hours}:${minutes.toString().padStart(2, '0')}${ampm}`;
+
+                        // Detect NO KINGS tag from event title
+                        const noKings = event.title.toLowerCase().includes('no kings') ? ' (NO KINGS)' : '';
                         
                         const url = event.browser_url;
                         
                         return {
                             date: timeslot.start_date,
-                            text: `${state} (${city}) – ${dayName}, ${month}/${day} at ${timeStr}. RSVP HERE.`,
-                            html: `${state} (${city}) – ${dayName}, ${month}/${day} at ${timeStr}. RSVP <a href="${url}" target="_blank">HERE</a>.`,
+                            text: `${state} (${city}) – ${dayName}, ${month}/${day}${noKings} at ${timeStr}. RSVP HERE.`,
+                            html: `${state} (${city}) – ${dayName}, ${month}/${day}${noKings} at ${timeStr}. RSVP <a href="${url}" target="_blank">HERE</a>.`,
                             url: url
                         };
                     })
