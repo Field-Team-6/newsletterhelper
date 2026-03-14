@@ -1411,11 +1411,13 @@ Answer in this exact JSON format (no other text):
                     const punctInsideLink = /[.,;:!?]/.test(lastChar);
                     if (punctInsideLink) {
                         const next = a.nextSibling;
-                        const afterText = (next && next.nodeType === 3) ? next.textContent.substring(0,5) : '';
+                        const afterText = (next && next.nodeType === 3) ? next.textContent.trimStart() : '';
+                        // CC quirk: if the same punct immediately follows </a> it renders fine — not a real error
+                        if (afterText.charAt(0) === lastChar) return;
                         linkAudit.push({
                             linkText: text.substring(0, 80),
                             lastCharInLink: lastChar,
-                            charAfterLink: afterText,
+                            charAfterLink: afterText.substring(0,5),
                             verdict: 'PUNCT_INSIDE_LINK'
                         });
                     }
@@ -1446,7 +1448,12 @@ RULES TO CHECK:
 2. PARTY CAPITALIZATION: "democrat" or "democratic" (lowercase) when referring to the Democratic Party or its members must be "Democrat" or "Democratic" (capitalized). Note: "democratic" as a general adjective ("democratic values") is fine lowercase.
 3. PROFANITY: flag any profanity or potentially offensive language (informational — may be intentional)
 4. DOUBLE SPACES: two or more spaces between sentences or words
-5. IN-PERSON HYPHENATION: ONLY flag genuine errors. "in-person" WITH hyphen is CORRECT when used as a compound adjective directly before a noun (e.g. "in-person event", "in-person voter drive", "in-person fundraiser"). "in person" WITHOUT hyphen is CORRECT in all other positions (e.g. "join us in person", "done in person"). Do NOT flag correct usage. Only flag: (a) "in person" used directly before a noun as an adjective, or (b) "in-person" used NOT before a noun.
+5. IN-PERSON HYPHENATION: Be VERY conservative — only flag clear errors. Rules:
+- "in-person" WITH hyphen is ALWAYS CORRECT before a noun: "in-person event" ✓, "in-person drives" ✓, "in-person voter drive" ✓, "in-person fundraiser" ✓, "in-person voter registration" ✓, "IN-PERSON DRIVES" ✓ (caps don't change the rule)
+- "in person" WITHOUT hyphen is CORRECT when NOT directly before a noun: "join us in person" ✓, "done in person" ✓, "register in person" ✓
+- CRITICAL: If you see "in-person" followed by ANY noun (drives, event, party, registration, etc.) — that is CORRECT, do NOT flag it
+- CRITICAL: Only flag if you see "in person" directly before a noun with NO hyphen, e.g. "in person event" ✗ or "in person fundraiser" ✗
+- CRITICAL: The quote you provide MUST appear verbatim word-for-word in the newsletter text. Do not invent or paraphrase.
 6. PEOPLE & ORG NAMES: flag any names that appear misspelled or inconsistent (e.g. "ActBlue" not "Actblue", "Mobilize" not "mobilize")
 7. HOTLINK PUNCTUATION: Report ONLY the following pre-detected cases where punctuation is definitively INSIDE a hyperlink (the parser confirmed the last character of the link text itself is punctuation). Do NOT invent any additional hotlink issues — only report what is in this list: ${JSON.stringify(linkAudit.slice(0,20))}. If this list is empty, do not report any hotlink issues.
 
@@ -1459,11 +1466,11 @@ Respond ONLY with a JSON array of issues. Each issue object must have:
 - "severity": "error"|"warning"|"info"
 - "category": "TYPO"|"CAPITALIZATION"|"PROFANITY"|"DOUBLE SPACE"|"HYPHENATION"|"NAME"|"HOTLINK"|"FONT"
 - "description": what is wrong
-- "quote": the exact offending text as it appears in the newsletter (max 80 chars)
+- "quote": the EXACT offending text copied verbatim from the newsletter text provided — it must appear word-for-word in the text above. NEVER invent, paraphrase, or approximate. If you cannot find the exact text, do not report the issue.
 - "fix": the corrected version of just the offending text
 - "copyText": what the user should paste into Constant Contact. Rules:
   * DOUBLE SPACE: the full corrected surrounding sentence (extra space removed) for find-and-replace — include enough context to be unique
-  * HOTLINK: ONLY the single sentence containing the link, corrected as plain text. The punctuation (period/comma/etc) should appear after the link text, not inside it. Example: if the issue is "Email me HERE," inside the link, the copyText should be just "Email me HERE." — the sentence containing the link only, not surrounding paragraphs or attribution lines
+  * HOTLINK: Set copyText to the corrected sentence as plain text (punctuation outside). Also set "copyHtml" to the corrected sentence as HTML with the hyperlink preserved, e.g. 'Email me <a href="mailto:dale@fieldteam6.org">HERE</a>.' — use the actual href from the link data provided. Single sentence only, not surrounding content.
   * TYPO/CAPITALIZATION/NAME/HYPHENATION: just the corrected word or short phrase
   * PROFANITY/FONT: set to null
 If NO issues found return []. Return ONLY the JSON array, no other text.`;
@@ -1518,11 +1525,13 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
                             if (issue.fix) html += '<div class="proof-issue-fix">→ ' + escH(issue.fix) + '</div>';
                             if (issue.copyText) {
                                 const showPreview = issue.category === 'DOUBLE SPACE' || issue.category === 'HOTLINK';
+                                const isHotlink = issue.category === 'HOTLINK';
                                 const copyLabel = showPreview ? '📋 Copy corrected sentence' : '📋 Copy fix';
                                 if (showPreview) {
                                     html += '<div style="margin-top:6px;font-family:Courier New,monospace;font-size:11px;color:#4a5568;background:#e2e8f0;padding:4px 8px;border-radius:4px;line-height:1.5;">' + escH(issue.copyText) + '</div>';
                                 }
-                                html += '<div style="margin-top:6px;"><button onclick="prCopyFix(this)" data-copy="' + escH(issue.copyText) + '" style="background:#3D9BE9;color:white;border:none;padding:5px 12px;border-radius:6px;font-family:Raleway,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">' + copyLabel + '</button></div>';
+                                const dataHtml = issue.copyHtml ? ' data-html="' + escH(issue.copyHtml) + '"' : '';
+                                html += '<div style="margin-top:6px;"><button onclick="prCopyFix(this)" data-copy="' + escH(issue.copyText) + '"' + dataHtml + ' style="background:#3D9BE9;color:white;border:none;padding:5px 12px;border-radius:6px;font-family:Raleway,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">' + copyLabel + (isHotlink && issue.copyHtml ? ' (with link)' : '') + '</button></div>';
                             }
                             html += '</div>';
                         });
@@ -1548,24 +1557,34 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
 
         function prCopyFix(btnEl) {
             const text = btnEl.getAttribute('data-copy') || '';
+            const html = btnEl.getAttribute('data-html') || '';
             const original = btnEl.textContent;
-            navigator.clipboard.writeText(text).then(() => {
+            const succeed = () => {
                 btnEl.textContent = '✅ Copied!';
                 btnEl.style.background = '#38a169';
-                setTimeout(() => {
-                    btnEl.textContent = original;
-                    btnEl.style.background = '#3D9BE9';
-                }, 2500);
-            }).catch(() => {
-                // Fallback for older browsers
+                setTimeout(() => { btnEl.textContent = original; btnEl.style.background = '#3D9BE9'; }, 2500);
+            };
+            if (html) {
+                // Rich copy — preserves hyperlinks when pasted into CC
+                try {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], {type: 'text/html'}),
+                        'text/plain': new Blob([text], {type: 'text/plain'})
+                    });
+                    navigator.clipboard.write([item]).then(succeed).catch(() => {
+                        navigator.clipboard.writeText(text).then(succeed);
+                    });
+                    return;
+                } catch(e) {}
+            }
+            navigator.clipboard.writeText(text).then(succeed).catch(() => {
                 const ta = document.createElement('textarea');
                 ta.value = text;
                 document.body.appendChild(ta);
                 ta.select();
                 document.execCommand('copy');
                 document.body.removeChild(ta);
-                btnEl.textContent = '✅ Copied!';
-                setTimeout(() => { btnEl.textContent = original; }, 2500);
+                succeed();
             });
         }
 
