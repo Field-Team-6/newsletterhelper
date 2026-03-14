@@ -90,8 +90,21 @@
             line-height: 1.6;
             max-height: 400px;
             overflow-y: auto;
-            white-space: pre-wrap;
             color: #2d3748;
+        }
+
+        .output-box p {
+            margin: 2px 0;
+        }
+
+        .output-box a {
+            color: #667eea;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .output-box a:hover {
+            color: #764ba2;
         }
 
         .copy-button {
@@ -258,7 +271,8 @@
                         
                         return {
                             date: timeslot.start_date,
-                            formatted: `${state} (${city}) – ${dayName}, ${month}/${day} at ${timeStr}. RSVP HERE.`,
+                            text: `${state} (${city}) – ${dayName}, ${month}/${day} at ${timeStr}. RSVP HERE.`,
+                            html: `${state} (${city}) – ${dayName}, ${month}/${day} at ${timeStr}. RSVP <a href="${url}" target="_blank">HERE</a>.`,
                             url: url
                         };
                     })
@@ -269,10 +283,11 @@
                     throw new Error('No qualifying events found after filtering');
                 }
 
-                // Format output
-                const formattedList = events.map(e => `• ${e.formatted}`).join('\n');
-                
-                outputText.textContent = formattedList;
+                // Render as HTML with clickable HERE links
+                outputText.innerHTML = events.map(e => `<p>• ${e.html}</p>`).join('\n');
+                // Store plain text version for clipboard fallback
+                outputText.dataset.plaintext = events.map(e => `• ${e.text}`).join('\n');
+                outputText.dataset.htmltext = `<ul style="list-style:none;padding:0;">${events.map(e => `<li>• ${e.html}</li>`).join('')}</ul>`;
                 eventCount.textContent = `Found ${events.length} upcoming voter drive${events.length !== 1 ? 's' : ''}`;
                 output.classList.add('visible');
 
@@ -287,15 +302,31 @@
         }
 
         function copyToClipboard() {
-            const text = document.getElementById('outputText').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = '✅ Copied!';
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                }, 2000);
-            });
+            const outputText = document.getElementById('outputText');
+            const htmlContent = outputText.dataset.htmltext;
+            const plainText = outputText.dataset.plaintext;
+
+            // Use ClipboardItem to copy both HTML and plain text
+            // so it pastes with live links into email/newsletter editors
+            try {
+                const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+                const textBlob = new Blob([plainText], { type: 'text/plain' });
+                const item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
+                navigator.clipboard.write([item]).then(() => {
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copied with live links!';
+                    setTimeout(() => { btn.textContent = originalText; }, 2500);
+                });
+            } catch (e) {
+                // Fallback: copy plain text
+                navigator.clipboard.writeText(plainText).then(() => {
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copied (plain text)';
+                    setTimeout(() => { btn.textContent = originalText; }, 2500);
+                });
+            }
         }
     </script>
 </body>
