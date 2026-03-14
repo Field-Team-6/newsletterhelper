@@ -852,6 +852,9 @@
                 return result;
             }
 
+            // Mark all general links as showing the remember button, regardless of outcome
+            result.aiVerified = true;
+
             // Fetch the page
             let pageHtml='', fetchStatus=0, finalUrl='';
             try {
@@ -883,7 +886,6 @@
             const isBlocked = (fetchStatus===403||fetchStatus===401||(fetchStatus===0&&pageHtml.length<500));
             if (isBlocked) {
                 result.status='warn'; result.icon='⚠️'; result.message='Site blocks automated reading — check manually';
-                result.aiVerified = true;
                 return result;
             }
 
@@ -953,7 +955,6 @@ Answer in this exact JSON format (no other text):
             } catch(e) {
                 // AI call failed — fall back to reachability, still show remember button
                 result.status='pass'; result.icon='✅'; result.message='Reachable (AI unavailable)';
-                result.aiVerified = true;
             }
             return result;
         }
