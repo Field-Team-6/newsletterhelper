@@ -529,7 +529,8 @@
             </div>
             <label class="input-label">Newsletter proof URL (Constant Contact, etc.)</label>
             <input type="text" class="url-input" id="proofUrl"
-                placeholder="https://campaignlp.constantcontact.com/em/..." />
+                placeholder="https://campaignlp.constantcontact.com/em/..."
+                onkeydown="if(event.key==='Enter'){runLinkCheck();}" />
 
             <button class="generate-btn" id="checkBtn" onclick="runLinkCheck()">
                 🔍 Check All Links
@@ -556,9 +557,12 @@
             <div class="info">
                 Uses AI to proofread the newsletter for typos, capitalization errors, profanity, double spaces, hyphenation, name spelling, hotlink punctuation, and font consistency. Auto-fills from the Proof Link Checker URL if already entered.
             </div>
-            <label class="input-label">Newsletter proof URL</label>
-            <input type="text" class="url-input" id="proofreadUrl"
-                placeholder="https://campaignlp.constantcontact.com/em/..." />
+            <div id="proofreadUrlWrap">
+                <label class="input-label">Newsletter proof URL</label>
+                <input type="text" class="url-input" id="proofreadUrl"
+                    placeholder="https://campaignlp.constantcontact.com/em/..."
+                    onkeydown="if(event.key==='Enter'){runProofread();}" />
+            </div>
             <button class="generate-btn" id="proofreadBtn" onclick="runProofread()">
                 ✏️ Proofread Newsletter
             </button>
@@ -584,6 +588,12 @@
             } else {
                 body.classList.add('open');
                 header.classList.add('open');
+                // When opening proofread, hide URL field if Tool 3 already has a URL
+                if (id === 'proofread') {
+                    const src = document.getElementById('proofUrl');
+                    const wrap = document.getElementById('proofreadUrlWrap');
+                    if (wrap) wrap.style.display = (src && src.value.trim()) ? 'none' : 'block';
+                }
             }
         }
 
@@ -1361,8 +1371,14 @@ Answer in this exact JSON format (no other text):
                 // Auto-fill from Tool 3 if empty
                 const src = document.getElementById('proofUrl');
                 const dst = document.getElementById('proofreadUrl');
-                if (src && src.value && dst && !dst.value) dst.value = src.value;
-                const url = dst.value.trim();
+                const wrap = document.getElementById('proofreadUrlWrap');
+                if (src && src.value) {
+                    if (dst && !dst.value) dst.value = src.value;
+                    if (wrap) wrap.style.display = 'none';
+                } else {
+                    if (wrap) wrap.style.display = 'block';
+                }
+                const url = (dst && dst.value.trim()) || (src && src.value.trim()) || '';
                 if (!url) throw new Error('Please enter a newsletter proof URL.');
 
                 // Fetch the newsletter HTML
@@ -1384,21 +1400,25 @@ Answer in this exact JSON format (no other text):
                 doc.querySelectorAll('script,style,img').forEach(el=>el.remove());
                 const plainText = (doc.body||doc.documentElement).innerText || doc.body.textContent || '';
 
-                // Extract link audit: for each <a>, capture {text, href, trailingChar}
+                // Extract link audit: only flag links where punct is genuinely INSIDE the <a> tag
                 const linkAudit = [];
                 const rawDoc = new DOMParser().parseFromString(proofData.html, 'text/html');
                 rawDoc.querySelectorAll('a[href]').forEach(a => {
                     const text = a.textContent.trim();
                     const href = a.getAttribute('href') || '';
                     if (href.startsWith('mailto:') || href.startsWith('#') || !text) return;
-                    // Check what immediately follows the </a> in the parent
-                    let nextChar = '';
-                    const next = a.nextSibling;
-                    if (next && next.nodeType === 3) nextChar = next.textContent.trimStart().charAt(0);
-                    // Check if link text itself ends in punctuation
                     const lastChar = text.slice(-1);
-                    const endsInPunct = /[.,;:!?]/.test(lastChar);
-                    linkAudit.push({text: text.substring(0,80), href: href.substring(0,100), endsInPunct, lastChar, nextChar});
+                    const punctInsideLink = /[.,;:!?]/.test(lastChar);
+                    if (punctInsideLink) {
+                        const next = a.nextSibling;
+                        const afterText = (next && next.nodeType === 3) ? next.textContent.substring(0,5) : '';
+                        linkAudit.push({
+                            linkText: text.substring(0, 80),
+                            lastCharInLink: lastChar,
+                            charAfterLink: afterText,
+                            verdict: 'PUNCT_INSIDE_LINK'
+                        });
+                    }
                 });
 
                 // Extract font/style audit: look for inline styles on text elements
@@ -1428,9 +1448,9 @@ RULES TO CHECK:
 2. PARTY CAPITALIZATION: "democrat" or "democratic" (lowercase) when referring to the Democratic Party or its members must be "Democrat" or "Democratic" (capitalized). Note: "democratic" as a general adjective ("democratic values") is fine lowercase.
 3. PROFANITY: flag any profanity or potentially offensive language (informational — may be intentional)
 4. DOUBLE SPACES: two or more spaces between sentences or words
-5. IN-PERSON HYPHENATION: "in-person" is correct as an adjective before a noun ("in-person event"). Without a noun following, it should be "in person" ("join us in person"). Flag incorrect uses.
+5. IN-PERSON HYPHENATION: ONLY flag genuine errors. "in-person" WITH hyphen is CORRECT when used as a compound adjective directly before a noun (e.g. "in-person event", "in-person voter drive", "in-person fundraiser"). "in person" WITHOUT hyphen is CORRECT in all other positions (e.g. "join us in person", "done in person"). Do NOT flag correct usage. Only flag: (a) "in person" used directly before a noun as an adjective, or (b) "in-person" used NOT before a noun.
 6. PEOPLE & ORG NAMES: flag any names that appear misspelled or inconsistent (e.g. "ActBlue" not "Actblue", "Mobilize" not "mobilize")
-7. HOTLINK PUNCTUATION: flag cases where a period, comma, or other punctuation appears to be INSIDE a hyperlink at the end of a sentence (the link text itself ends in punctuation). Based on this data: ${JSON.stringify(linkAudit.filter(l=>l.endsInPunct).slice(0,20))}
+7. HOTLINK PUNCTUATION: Report ONLY the following pre-detected cases where punctuation is definitively INSIDE a hyperlink (the parser confirmed the last character of the link text itself is punctuation). Do NOT invent any additional hotlink issues — only report what is in this list: ${JSON.stringify(linkAudit.slice(0,20))}. If this list is empty, do not report any hotlink issues.
 
 FONT ISSUES DETECTED BY PARSER (report these if present): ${styleAudit.length > 0 ? JSON.stringify(styleAudit.slice(0,10)) : 'None detected'}
 
@@ -1455,24 +1475,37 @@ Return ONLY the JSON array, no other text.`;
 
                 // Render results
                 output.classList.add('visible');
-                if (!issues.length) {
-                    results.innerHTML = '<div class="proof-clean">✅ No issues found — newsletter looks clean!</div>';
+                // Load ignored issues
+                const IGNORE_KEY = 'blurbinator_ignored_issues_v1';
+                const HARDCODED_IGNORED = window.BLURBINATOR_HARDCODED_IGNORED || [];
+                function loadIgnored() { try { return JSON.parse(localStorage.getItem(IGNORE_KEY)||'[]'); } catch(e){ return []; } }
+                function isIgnored(issue) {
+                    const key = (issue.category||'') + '::' + (issue.quote||issue.description||'');
+                    return HARDCODED_IGNORED.includes(key) || loadIgnored().includes(key);
+                }
+                const visibleIssues = issues.filter(i => !isIgnored(i));
+                const ignoredCount = issues.length - visibleIssues.length;
+                if (!visibleIssues.length) {
+                    results.innerHTML = '<div class="proof-clean">✅ No issues found — newsletter looks clean!' + (ignoredCount ? ' (' + ignoredCount + ' ignored)' : '') + '</div>';
                 } else {
-                    // Group by category
                     const cats = {};
-                    issues.forEach(issue => {
+                    visibleIssues.forEach(issue => {
                         const cat = issue.category || 'OTHER';
                         if (!cats[cat]) cats[cat] = [];
                         cats[cat].push(issue);
                     });
                     const catIcons = {TYPO:'🔤',CAPITALIZATION:'🏛️',PROFANITY:'🤬',['DOUBLE SPACE']:'␣',HYPHENATION:'➖',NAME:'👤',HOTLINK:'🔗',FONT:'🎨',OTHER:'⚠️'};
-                    let html = '<div style="font-family:Raleway,sans-serif;font-weight:800;font-size:14px;color:#2d3748;margin-bottom:16px;">' + issues.length + ' issue' + (issues.length!==1?'s':'') + ' found</div>';
+                    let html = '<div style="font-family:Raleway,sans-serif;font-weight:800;font-size:14px;color:#2d3748;margin-bottom:16px;">' + visibleIssues.length + ' issue' + (visibleIssues.length!==1?'s':'') + ' found' + (ignoredCount ? ' <span style=\"color:#a0aec0;font-weight:600;font-size:12px;\">(' + ignoredCount + ' ignored)</span>' : '') + '</div>';
                     Object.keys(cats).forEach(cat => {
                         html += '<div class="proof-section-head">' + (catIcons[cat]||'⚠️') + ' ' + cat + ' (' + cats[cat].length + ')</div>';
                         cats[cat].forEach(issue => {
                             const sev = issue.severity || 'warning';
+                            const rawKey = (issue.category||'') + '::' + (issue.quote||issue.description||'');
                             html += '<div class="proof-issue ' + sev + '">';
+                            html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">';
                             html += '<div class="proof-issue-type">' + escH(issue.category||'') + '</div>';
+                            html += '<button onclick="prIgnoreIssue(this)" data-key="' + escH(rawKey) + '" title="Ignore this issue forever" style="background:none;border:1px solid #cbd5e0;color:#a0aec0;padding:2px 7px;border-radius:4px;font-family:Raleway,sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:8px;flex-shrink:0;" onmouseover="this.style.borderColor=\"#fc8181\";this.style.color=\"#e53e3e\";" onmouseout="this.style.borderColor=\"#cbd5e0\";this.style.color=\"#a0aec0\";">× Ignore forever</button>';
+                            html += '</div>';
                             html += '<div class="proof-issue-desc">' + escH(issue.description||'') + '</div>';
                             if (issue.quote) html += '<div class="proof-issue-quote">' + escH(issue.quote) + '</div>';
                             if (issue.fix) html += '<div class="proof-issue-fix">→ ' + escH(issue.fix) + '</div>';
@@ -1488,6 +1521,39 @@ Return ONLY the JSON array, no other text.`;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '✏️ Proofread Newsletter';
+            }
+        }
+
+        // ── Hardcoded ignored proofreading issues (shared by all users) ──
+        window.BLURBINATOR_HARDCODED_IGNORED = [
+            // Add ignored issue keys here — format: "CATEGORY::quote or description"
+            // Example: 'DOUBLE SPACE::WORLDS SAVED: 1'
+        ];
+
+        async function prIgnoreIssue(btnEl) {
+            const key = btnEl.getAttribute('data-key');
+            if (!key) return;
+            if (!confirm('Ignore this issue forever for all users?\n\n"' + key.split('::')[1] + '"\n\nThis will commit a change to the app — live in ~60s.')) return;
+            btnEl.textContent = '⏳ Saving...';
+            btnEl.disabled = true;
+            try {
+                const res = await fetch('/.netlify/functions/add-ignored-issue', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({key})
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    const card = btnEl.closest('.proof-issue');
+                    if (card) {
+                        card.style.opacity = '0.4';
+                        card.style.pointerEvents = 'none';
+                        btnEl.textContent = '✅ Ignored! Live in ~60s';
+                    }
+                } else { throw new Error(data.error || 'Unknown error'); }
+            } catch(e) {
+                btnEl.textContent = '❌ ' + e.message;
+                btnEl.disabled = false;
             }
         }
 
