@@ -28,7 +28,8 @@ exports.handler = async function(event, context) {
         }
         // Insert before the closing bracket of BLURBINATOR_HARDCODED_IGNORED
         const MARKER = '        ];\n\n        function prCopyFix';
-        const newEntry = "            '" + key.replace(/'/g, "\\'") + "',\n";
+        const safeKey = key.replace(/[\r\n]/g, ' ').replace(/'/g, "\\'");
+        const newEntry = "                '" + safeKey + "',\n";
         if (!currentContent.includes(MARKER)) return { statusCode: 500, headers, body: JSON.stringify({ error: 'Marker not found in index.html' }) };
         const newContent = currentContent.replace(MARKER, newEntry + MARKER);
         const b64 = Buffer.from(newContent, 'utf8').toString('base64');
