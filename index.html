@@ -574,10 +574,10 @@
     </div>
 
     <script>
-        // ════════════════════════════════════════
+        // ========================================
         // Collapse / expand cards
         // Cards start collapsed; click header to open, click again to close
-        // ════════════════════════════════════════
+        // ========================================
         function toggleCard(id) {
             const body   = document.getElementById(id + 'Body');
             const header = body.previousElementSibling;
@@ -597,9 +597,9 @@
             }
         }
 
-        // ════════════════════════════════════════
+        // ========================================
         // TOOL 1 – Voter Drive List Generator
-        // ════════════════════════════════════════
+        // ========================================
         const ORG_ID = 1255;
         const API_BASE = 'https://api.mobilize.us/v1';
 
@@ -691,9 +691,9 @@
             richCopy(outputText.dataset.htmltext, outputText.dataset.plaintext, e.target);
         }
 
-        // ════════════════════════════════════════
+        // ========================================
         // TOOL 2 – Postcarding States Generator
-        // ════════════════════════════════════════
+        // ========================================
         async function generatePostcardStates() {
             const btn = document.getElementById('postcardBtn');
             const output = document.getElementById('postcardOutput');
@@ -749,9 +749,9 @@
             richCopy(outputText.dataset.htmltext, outputText.dataset.plaintext, e.target);
         }
 
-        // ════════════════════════════════════════
+        // ========================================
         // Shared rich-copy helper
-        // ════════════════════════════════════════
+        // ========================================
         function richCopy(htmlContent, plainText, btnEl) {
             const originalText = btnEl.textContent;
             try {
@@ -771,9 +771,9 @@
             }
         }
 
-        // ════════════════════════════════════════
+        // ========================================
         // TOOL 3 – Proof Link Checker
-        // ════════════════════════════════════════
+        // ========================================
         const MOB_API = 'https://api.mobilize.us/v1';
 
         function lcExtractMobilizeId(url) {
@@ -1351,9 +1351,9 @@ Answer in this exact JSON format (no other text):
             lcRenderPills(sumDiv, total, total, cats);
         }
 
-        // ════════════════════════════════════════
+        // ========================================
         // TOOL 4 – Proofread Newsletter
-        // ════════════════════════════════════════
+        // ========================================
 
         async function runProofread() {
             const btn = document.getElementById('proofreadBtn');
@@ -1403,11 +1403,7 @@ Answer in this exact JSON format (no other text):
                 // Extract link audit: only flag links where punct is genuinely INSIDE the <a> tag
                 const linkAudit = [];
                 const rawDoc = new DOMParser().parseFromString(proofData.html, 'text/html');
-                                // Parse rendered HTML to cross-check links vs actual display
-                const rBody = new DOMParser().parseFromString(proofData.html, 'text/html').body;
-                const rText = rBody ? (rBody.innerText || rBody.textContent || '') : '';
-
-                rawDoc.querySelectorAll('a[href]').forEach(a => {
+                                rawDoc.querySelectorAll('a[href]').forEach(a => {
                     const text = a.textContent.trim();
                     const href = a.getAttribute('href') || '';
                     if (href.startsWith('mailto:') || href.startsWith('#') || !text) return;
@@ -1417,9 +1413,13 @@ Answer in this exact JSON format (no other text):
                     const afterText = (next && next.nodeType === 3) ? next.textContent.trimStart() : '';
                     if (afterText.charAt(0) === lastChar) return;
                     const linkNoPunct = text.slice(0, -1).trim();
-                    if (linkNoPunct.length > 2 && rText) {
-                        const ri = rText.indexOf(linkNoPunct);
-                        if (ri !== -1 && rText.charAt(ri + linkNoPunct.length) !== lastChar) return;
+                    if (linkNoPunct.length > 2) {
+                        const rBody = new DOMParser().parseFromString(proofData.html, 'text/html').body;
+                        const rText = rBody ? (rBody.innerText || rBody.textContent || '') : '';
+                        if (rText) {
+                            const ri = rText.indexOf(linkNoPunct);
+                            if (ri !== -1 && rText.charAt(ri + linkNoPunct.length) !== lastChar) return;
+                        }
                     }
                     linkAudit.push({linkText: text.substring(0,80), lastCharInLink: lastChar, charAfterLink: afterText.substring(0,5), verdict: 'PUNCT_INSIDE_LINK'});
                 });
