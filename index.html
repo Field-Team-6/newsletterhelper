@@ -1559,17 +1559,21 @@ Answer in this exact JSON format (no other text):
 
 RULES TO CHECK:
 1. TYPOS & GRAMMAR: spelling errors, wrong words, clear grammatical mistakes. Do NOT flag voter drive bullet lines (e.g. "GA (SAVANNAH) - Saturday, 3/14 at 9:30a") as incomplete — these are correctly formatted abbreviated event listings, not sentences. Only flag genuine misspellings or wrong words.
-2. PARTY CAPITALIZATION: "democrat" or "democratic" (lowercase) when referring to the Democratic Party or its members must be "Democrat" or "Democratic" (capitalized). Note: "democratic" as a general adjective ("democratic values") is fine lowercase.
-3. PROFANITY: flag any profanity or potentially offensive language (informational — may be intentional)
-4. DOUBLE SPACES: two or more spaces between sentences or words
-5. IN-PERSON HYPHENATION: Be VERY conservative — only flag clear errors. Rules:
+2. PARTY CAPITALIZATION: Flag capitalization errors in political terms — both directions:
+- "democrat" or "democratic" (lowercase) when clearly referring to the Democratic Party or its members must be capitalized: "Democrat" or "Democratic". Example: "register new democratic voters" is wrong, "register new Democratic voters" is correct.
+- "Democracy" (capitalized) when referring to the general concept of democracy (not the party) should be lowercase: "democracy". Example: "feed new voters into the Democracy" is wrong, "feed new voters into the democracy" is correct.
+- Only flag when context makes it clear which meaning is intended. Do NOT flag ambiguous cases.
+3. MISSING APOSTROPHES: Flag contractions missing their apostrophe anywhere in the text (not just headings). Common examples: "LETS" should be "LET'S", "DONT" should be "DON'T", "CANT" should be "CAN'T", "WONT" should be "WON'T", "DIDNT" should be "DIDN'T", "ITS" used as a contraction (meaning "it is") should be "IT'S", "YOURE" should be "YOU'RE", "THEYRE" should be "THEY'RE", "WERE" used as contraction should be "WE'RE", "WOULDNT" should be "WOULDN'T", "COULDNT" should be "COULDN'T". Be careful: "ITS" as a possessive is correct without apostrophe.
+4. PROFANITY: flag any profanity or potentially offensive language (informational — may be intentional)
+5. DOUBLE SPACES: two or more spaces between sentences or words
+6. IN-PERSON HYPHENATION: Be VERY conservative — only flag clear errors. Rules:
 - "in-person" WITH hyphen is ALWAYS CORRECT before a noun: "in-person event" ✓, "in-person drives" ✓, "in-person voter drive" ✓, "in-person fundraiser" ✓, "in-person voter registration" ✓, "IN-PERSON DRIVES" ✓ (caps don't change the rule)
 - "in person" WITHOUT hyphen is CORRECT when NOT directly before a noun: "join us in person" ✓, "done in person" ✓, "register in person" ✓
 - CRITICAL: If you see "in-person" followed by ANY noun (drives, event, party, registration, etc.) — that is CORRECT, do NOT flag it
 - CRITICAL: Only flag if you see "in person" directly before a noun with NO hyphen, e.g. "in person event" ✗ or "in person fundraiser" ✗
 - CRITICAL: The quote you provide MUST appear verbatim word-for-word in the newsletter text. Do not invent or paraphrase.
-6. PEOPLE & ORG NAMES: flag any names that appear misspelled or inconsistent (e.g. "ActBlue" not "Actblue", "Mobilize" not "mobilize")
-7. HOTLINK PUNCTUATION: Report ONLY the following pre-detected cases where punctuation is definitively INSIDE a hyperlink (the parser confirmed the last character of the link text itself is punctuation). Do NOT invent any additional hotlink issues — only report what is in this list: ${JSON.stringify(linkAudit.slice(0,20))}. If this list is empty, do not report any hotlink issues.
+7. PEOPLE & ORG NAMES: flag any names that appear misspelled or inconsistent (e.g. "ActBlue" not "Actblue", "Mobilize" not "mobilize")
+8. HOTLINK PUNCTUATION: Report ONLY the following pre-detected cases where punctuation is definitively INSIDE a hyperlink (the parser confirmed the last character of the link text itself is punctuation). Do NOT invent any additional hotlink issues — only report what is in this list: ${JSON.stringify(linkAudit.slice(0,20))}. If this list is empty, do not report any hotlink issues.
 
 FONT ISSUES DETECTED BY PARSER (report these if present): ${styleAudit.length > 0 ? JSON.stringify(styleAudit.slice(0,10)) : 'None detected'}
 
@@ -1578,7 +1582,7 @@ ${plainText.substring(0, 6000)}
 
 Respond ONLY with a JSON array of issues. Each issue object must have:
 - "severity": "error"|"warning"|"info"
-- "category": "TYPO"|"CAPITALIZATION"|"PROFANITY"|"DOUBLE SPACE"|"HYPHENATION"|"NAME"|"HOTLINK"|"FONT"
+- "category": "TYPO"|"CAPITALIZATION"|"APOSTROPHE"|"PROFANITY"|"DOUBLE SPACE"|"HYPHENATION"|"NAME"|"HOTLINK"|"FONT"
 - "description": what is wrong
 - "quote": the EXACT offending text copied verbatim from the newsletter text provided — it must appear word-for-word in the text above. NEVER invent, paraphrase, or approximate. If you cannot find the exact text, do not report the issue.
 - "fix": the corrected version of just the offending text
