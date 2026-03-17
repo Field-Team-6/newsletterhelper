@@ -5,11 +5,8 @@
   [build.environment]
     SECRETS_SCAN_OMIT_KEYS = "POSTCARD_EMAIL,POSTCARD_PASSWORD"
 
-[functions]
-  timeout = 26
-
-  [[headers]]
-    for = "/*"
-    [headers.values]
-      X-Frame-Options = "DENY"
-      X-Content-Type-Options = "nosniff"
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
