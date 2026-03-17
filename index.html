@@ -1807,7 +1807,9 @@ LET'S PUT ON A SHOW (Mar 2026), CUT TRUMP'S TERM IN HALF (Feb 2026), THE RIGHT P
 
                 // Step 4: Call AI with newsletter text + history + news search request
                 btn.textContent = 'Asking Claude...';
-                const aiPrompt = `You are helping write the Field Team 6 weekly newsletter. Field Team 6 does partisan in-person voter registration — their mission is "Register Democrats. Save the world."
+                const aiPrompt = `You are helping write the Field Team 6 weekly newsletter. FIRST: use the gmail tool to search for the most recent email with subject containing 'Field Team 6 Weekly'. Read its full content to understand last week's newsletter - the opening theme, headings, and tone. Use that as your primary source for last week. If Gmail search fails, fall back to the headings below.
+
+ Field Team 6 does partisan in-person voter registration — their mission is "Register Democrats. Save the world."
 
 NEWSLETTER BLURB HEADINGS FROM LAST WEEK:
 ${cleanHeadings.map(h => '- ' + h).join('\n')}
@@ -1845,7 +1847,7 @@ Format your response as clean HTML using <h3> for section headers, <ul>/<li> for
                 const aiResp = await fetch('/.netlify/functions/ai-check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: aiPrompt, maxTokens: 2000 })
+                    body: JSON.stringify({ prompt: aiPrompt, maxTokens: 2000, mcp_servers: [{ type: 'url', url: 'https://gmail.mcp.claude.com/mcp', name: 'gmail' }] })
                 });
                 const aiData = await aiResp.json();
                 const html = aiData.result || aiData.content || '<p>No response from AI.</p>';
