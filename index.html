@@ -1853,11 +1853,17 @@ BUT WAIT
 Give exactly 4 options. Each = ALL-CAPS title + one sentence on the hook/category. No favorite. No draft. No CTA.
 
 ## THIS WEEK'S NEWS
-Search the web right now for the 5 most recent and relevant headlines about: voter registration, voting rights, voter suppression, 2026 elections, midterms, civic activism, democracy. Format each as:
-- [Headline] ([Source], [date])
+Search the web right now for the 5 most recent and relevant headlines about: voter registration, voting rights, voter suppression, 2026 elections, midterms, civic activism, democracy. Rules:
+- Do NOT include any introductory sentence or preamble before the list
+- Format each as: - [Headline] (<a href="[URL]">[Publication Name]</a>, [date])
+- Hotlink the publication name to the actual article URL
+- No "---" separators anywhere in the output
 
 ## UPCOMING EVENTS TO PROMOTE
 MOBILIZE_EVENTS_PLACEHOLDER
+
+## POSSIBLE FT6 EVENTS TO PROMOTE
+MOBILIZE_FT6_PLACEHOLDER
 
 FORMAT RULES for HTML output:
 - Use <h2 style="margin-top:28px;margin-bottom:6px"> for BIG NEWS, EVENTS, VOL OPS, BUT WAIT, OPENING THEME OPTIONS
@@ -1866,33 +1872,70 @@ FORMAT RULES for HTML output:
 - Each theme option: <p style="margin-top:10px;margin-bottom:0"><strong>TITLE</strong> — sentence</p>
 - Use <ul style="margin-top:4px"> for bullet lists
 - No markdown, no triple backticks
+- No introductory sentences or preamble
+- No '---' horizontal rules anywhere
 
 Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists. No markdown, no triple backticks.`; 
 
-                // Fetch named + town-hall events from Mobilize
+                // Fetch non-voter-drive events from Mobilize for two lists
         let mobilizeSection = '(none found)';
+        let ft6Section = '(none found)';
         try {
-          const [namedResp, townResp] = await Promise.all([
-            fetch('https://api.mobilize.us/v1/organizations/1255/events?event_types=13,14&per_page=100&timeslot_start=gte_now'),
-            fetch('https://api.mobilize.us/v1/organizations/1255/events?event_types=3&per_page=100&timeslot_start=gte_now')
-          ]);
-          const [namedData, townData] = await Promise.all([namedResp.json(), townResp.json()]);
-          const allEvents = [...(namedData.data||[]), ...(townData.data||[])];
-          const skipWords = new Set(['The','A','An','For','And','Or','In','On','At','To','Join','With','How','Why','What','Get','Learn','Find','Help','Make','Take','Let','See','Our','Your','This','That','All','New','Free','Next','Come','Sign','Register','Vote','Voter','Drive','Voting','Democracy','Field','Team','No','Yes','Are','Is','Was','Were','Be','Been','Being','About','Into']);
-          const named = allEvents.filter(e => {
-            const words = (e.title||'').match(/\b[A-Z][a-z]{2,}\b/g)||[];
-            return words.some(w => !skipWords.has(w));
-          }).slice(0,12);
-          if (named.length) {
-            mobilizeSection = named.map(e => {
-              const ts = e.timeslots?.[0]?.start_date;
-              const d = ts ? new Date(ts*1000) : null;
-              const dateStr = d ? (d.getMonth()+1)+'/'+(d.getDate()) : '';
-              return '- '+e.title+(dateStr?' ('+dateStr+')':'');
-            }).join('\n');
-          }
-        } catch(mobErr) { mobilizeSection = '(error: '+mobErr.message+')'; }
+          // Fetch all event types except voter drives (type 10)
+          const allResp = await fetch('https://api.mobilize.us/v1/organizations/1255/events?per_page=150&timeslot_start=gte_now');
+          const allData = await allResp.json();
+          const allEvents = (allData.data||[]).filter(e => {
+            const types = (e.event_types||[]).map(t=>t.name||'');
+            const isVoterDrive = types.some(t => /voter.?drive|registration.?drive/i.test(t)) || (e.event_type_id===10);
+            return !isVoterDrive;
+          });
+
+          // Format helper
+          const fmt = e => {
+            const ts = e.timeslots?.[0]?.start_date;
+            const d = ts ? new Date(ts*1000) : null;
+            const dateStr = d ? (d.getMonth()+1)+'/'+(d.getDate()) : '';
+            return '- '+e.title+(dateStr?' ('+dateStr+')':'');
+          };
+
+          // List 1: UPCOMING EVENTS - any non-voter-drive (up to 12)
+          if (allEvents.length) mobilizeSection = allEvents.slice(0,12).map(fmt).join('\n');
+
+          // List 2: POSSIBLE FT6 EVENTS - must match one of:
+          //   a) full first+last name (two consecutive capitalized words not in skip list, at least 4 chars each)
+          //   b) org name that is NOT Field Team 6 / FT6
+          //   c) event type is Town Hall or Strategy Briefing
+          const skipNames = new Set(['Field','Team','Voter','Drive','Voting','Register','Democracy','Join','Learn','Help','Sign','Come','Next','Free','With','About']);
+          const ft6Events = allEvents.filter(e => {
+            const t = e.title||'';
+            const types = (e.event_types||[]).map(x=>(x.name||'').toLowerCase());
+            // Town hall or strategy briefing by event type or title
+            if (types.some(x => x.includes('town hall') || x.includes('strategy'))) return true;
+            if (/strategy briefing/i.test(t)) return true;
+            // Full name: two consecutive Title-case words, 3+ chars, neither in skip list
+            const fullName = /\b([A-Z][a-z]{2,})\s+([A-Z][a-z]{2,})\b/.test(t) && (() => {
+              const m = t.match(/\b([A-Z][a-z]{2,})\s+([A-Z][a-z]{2,})\b/g)||[];
+              return m.some(pair => {
+                const [f,l] = pair.split(' ');
+                return !skipNames.has(f) && !skipNames.has(l);
+              });
+            })();
+            if (fullName) return true;
+            // Org name (not FT6): abbreviation like 1KWS, or multi-word org not FT6
+            if (/\b(Indivisible|Swing|Alliance|Collective|Coalition|Network|Council|Women|Strong|Together|Action|United|Forward|Rising|Progressive|Bluegrass|Bluesky|Sunrise|Working|Families|Planned|Parenthood)\b/i.test(t)) return true;
+            // w/ pattern followed by org name
+            if (/w\/[A-Z0-9]/.test(t)) return true;
+            return false;
+          });
+          if (ft6Events.length) ft6Section = ft6Events.slice(0,15).map(fmt).join('\n');
+          else ft6Section = '(none found matching criteria)';
+
+        } catch(mobErr) {
+          mobilizeSection = '(error: '+mobErr.message+')';
+          ft6Section = '(error: '+mobErr.message+')';
+        }
         aiPrompt = aiPrompt.split('MOBILIZE_EVENTS_PLACEHOLDER').join(mobilizeSection);
+        aiPrompt = aiPrompt.split('MOBILIZE_FT6_PLACEHOLDER').join(ft6Section);
 
         const aiResp = await fetch('/.netlify/functions/ai-check', {
                     method: 'POST',
