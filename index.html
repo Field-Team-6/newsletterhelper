@@ -1824,51 +1824,32 @@ KEY CONTEXT (week of Mar 19, 2026):
 - FT6 needs to raise $3M to register 3M new voters
 - Do NOT repeat the "put on a show" / entertainment category just used
 
-YOUR OUTPUT — use this exact structure:
+YOUR OUTPUT — use this exact structure, nothing more. Do NOT add descriptions, examples, locations, or extra text:
 
 ## LAST NEWSLETTER SUMMARY
 OPENING: [title] — [one sentence]
 
 BIG NEWS
-- [date if any] - [blurb title]
-(etc.)
+- 3/28 - No Kings III
+- [date if applicable] - [blurb title]
+- [date if applicable] - [blurb title]
 
-EVENTS - In-person Voter Drives
-- [date] - [location(s)]
-(etc., then list other events on one line each)
+EVENTS
+- In-person Voter Drives
 
 VOL OPS
 
 BUT WAIT
-- [item]
+- [title]
+- [title]
+
+
+
 
 ## OPENING THEME OPTIONS
-Give 4 options. Each = ALL-CAPS title + one sentence on the hook/category. Make them genuinely different.
+Give exactly 4 options. Each = ALL-CAPS title + one sentence on the hook/category. No favorite. No draft. No CTA.
 
-## TOP PICK
-[Title] — [1-2 sentences on why it fits this moment]
-
-## DRAFT OPENING BLURB
-[2-3 sentences, first-person, warm + urgent + a little witty, newsletter voice]
-
-## CTA SIGN-OFF
-[One punchy line]
-
-Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists. No markdown, no triple backticks.`; 
-
-                const aiResp = await fetch('/.netlify/functions/ai-check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: aiPrompt })
-                });
-                const aiData = await aiResp.json();
-                const html = aiData.text || aiData.text || '<p>No response from AI.</p>';
-
-                results.innerHTML = `
-                    <div style="margin-top:24px;border-top:2px solid #e2e8f0;padding-top:20px">
-                        ${html}
-                    </div>
-                `;
+Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists. No markdown, no triple backticks.`;
 
             } catch(err) {
                 results.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
