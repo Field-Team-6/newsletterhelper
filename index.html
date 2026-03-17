@@ -1880,9 +1880,8 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
           const ignored = JSON.parse(localStorage.getItem('blurb_ignored_events')||'[]');
           const partyEvents = (mobData.data||[]).filter(e => {
             if (ignored.includes(e.id)) return false;
-            const typeNames = (e.event_types||[]).map(t=>(t.name||'').toLowerCase());
-            return typeNames.some(t => t.includes('party') || t.includes('zparty'))
-                || /\bparty\b|\bzparty\b/i.test(e.title||'');
+            const tagNames = (e.tags||[]).map(t=>(t.name||'').toLowerCase());
+            return tagNames.includes('party') || tagNames.includes('zparty');
           });
           if (partyEvents.length) {
             mobilizeSection = partyEvents.map(e => {
@@ -1908,15 +1907,15 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                         ${html}
                     </div>
                 `;
+                // Inject Ignore buttons for [EVENT:id] markers
+                results.innerHTML = results.innerHTML.replace(/\[EVENT:(\d+)\]\s*/g, (match, eid) => {
+                  return '<button onclick="(function(btn){var ig=JSON.parse(localStorage.getItem(\'blurb_ignored_events\')||\'[]\');var id=+btn.dataset.eid;if(!ig.includes(id)){ig.push(id);localStorage.setItem(\'blurb_ignored_events\',JSON.stringify(ig));}btn.closest(\'li\').style.opacity=\'0.3\';btn.textContent=\'✓ Ignored\';btn.disabled=true;})(this)" data-eid="'+eid+'" style="font-size:11px;padding:1px 8px;margin-right:6px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;vertical-align:middle">Ignore</button>';
+                });
 
             } catch(err) {
                 results.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
             } finally {
-                // Inject Ignore buttons for [EVENT:id] markers
-          results.innerHTML = results.innerHTML.replace(/\[EVENT:(\d+)\]\s*/g, (_, id) => {
-            return `<button onclick="(function(){var ig=JSON.parse(localStorage.getItem('blurb_ignored_events')||'[]');if(!ig.includes(+${id})){ig.push(+${id});localStorage.setItem('blurb_ignored_events',JSON.stringify(ig));}this.closest('li').style.opacity='0.3';this.textContent='✓ Ignored';this.disabled=true;}).call(this)" style="font-size:11px;padding:1px 7px;margin-right:6px;background:#eee;border:1px solid #ccc;border-radius:4px;cursor:pointer;vertical-align:middle">Ignore</button>`;
-          });
-          btn.disabled = false; btn.classList.remove('loading'); btn.textContent = '\uD83D\uDDE8\uFE0F Blurbinate!';
+                btn.disabled = false; btn.classList.remove('loading'); btn.textContent = '\uD83D\uDDE8\uFE0F Blurbinate!';
             }
         }
 
