@@ -1841,6 +1841,7 @@ EVENTS
 (list ONLY named events like postcard parties, social storms, fundraisers, trainings — NOT individual voter drive locations)
 
 VOL OPS
+(heading only — no bullet points, no content)
 
 BUT WAIT
 - [title]
@@ -1854,15 +1855,12 @@ Give exactly 4 options. Each = ALL-CAPS title + one sentence on the hook/categor
 
 ## THIS WEEK'S NEWS
 Search the web right now for the 5 most recent and relevant headlines about: voter registration, voting rights, voter suppression, 2026 elections, midterms, civic activism, democracy. Rules:
-- Output NOTHING before the first ## heading — no intro sentences, no preamble
+- Output NOTHING at all before the first ## heading. Not one word. No "I'll help", no "Let me search", no "Here's the framework", nothing. Start with ## immediately.
 - No "---" horizontal rules anywhere in the output
 - Format each news item as: - [Headline] (<a href="[full article URL]">[Publication Name]</a>, [date])
 
 ## UPCOMING EVENTS TO PROMOTE
 MOBILIZE_EVENTS_PLACEHOLDER
-
-## POSSIBLE FT6 EVENTS TO PROMOTE
-MOBILIZE_FT6_PLACEHOLDER
 
 FORMAT RULES for HTML output:
 - Use <h2 style="margin-top:28px;margin-bottom:6px"> for BIG NEWS, EVENTS, VOL OPS, BUT WAIT, OPENING THEME OPTIONS
@@ -1925,7 +1923,6 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
           }
         } catch(e3) { ft6Section = '(error)'; }
         aiPrompt = aiPrompt.split('MOBILIZE_EVENTS_PLACEHOLDER').join(mobilizeSection);
-        aiPrompt = aiPrompt.split('MOBILIZE_FT6_PLACEHOLDER').join(ft6Section);
 
         const aiResp = await fetch('/.netlify/functions/ai-check', {
                     method: 'POST',
@@ -1944,7 +1941,63 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
             } catch(err) {
                 results.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
             } finally {
-                btn.disabled = false; btn.classList.remove('loading'); btn.textContent = '\uD83D\uDDE8\uFE0F Blurbinate!';
+                // Inject Ignore buttons for [EVENT:id] markers
+          results.innerHTML = results.innerHTML.replace(/\[EVENT:(\d+)\]\s*/g, (_, id) => {
+            return `<button onclick="(function(){var ig=JSON.parse(localStorage.getItem('blurb_ignored_events')||'[]');if(!ig.includes(+${id})){ig.push(+${id});localStorage.setItem('blurb_ignored_events',JSON.stringify(ig));}this.closest('li').style.opacity='0.3';this.textContent='✓ Ignored';this.disabled=true;}).call(this)" style="font-size:11px;padding:1px 7px;margin-right:6px;background:#eee;border:1px solid #ccc;border-radius:4px;cursor:pointer;vertical-align:middle">Ignore</button>`;
+          });
+          btn.disabled = false; btn.classList.remove('loading'); btn.textContent = '\uD83D\uDDE8\uFE0F Blurbinate!';
+            }
+        }
+
+
+    </script>
+</body>
+</html>
+// Fetch Party/Zparty events from Mobilize
+        let mobilizeSection = '(none found)';
+        try {
+          const mobResp = await fetch('https://api.mobilize.us/v1/organizations/1255/events?per_page=150&timeslot_start=gte_now');
+          const mobData = await mobResp.json();
+          const ignored = JSON.parse(localStorage.getItem('blurb_ignored_events')||'[]');
+          const partyEvents = (mobData.data||[]).filter(e => {
+            if (ignored.includes(e.id)) return false;
+            const types = (e.event_types||[]).map(t=>(t.name||'').toLowerCase());
+            return types.some(t => t.includes('party') || t.includes('zparty')) ||
+                   /party|zparty/i.test(e.title||'');
+          });
+          if (partyEvents.length) {
+            mobilizeSection = partyEvents.map(e => {
+              const ts = e.timeslots?.[0]?.start_date;
+              const d = ts ? new Date(ts*1000) : null;
+              const dateStr = d ? (d.getMonth()+1)+'/'+(d.getDate()) : '';
+              return '[EVENT:'+e.id+'] '+e.title+(dateStr?' ('+dateStr+')':'');
+            }).join('\n');
+          }
+        } catch(mobErr) { mobilizeSection = '(error: '+mobErr.message+')'; }
+        aiPrompt = aiPrompt.split('MOBILIZE_EVENTS_PLACEHOLDER').join(mobilizeSection);
+
+        const aiResp = await fetch('/.netlify/functions/ai-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: aiPrompt })
+                });
+                const aiData = await aiResp.json();
+                const html = aiData.text || aiData.text || '<p>No response from AI.</p>';
+
+                results.innerHTML = `
+                    <div style="margin-top:24px;border-top:2px solid #e2e8f0;padding-top:20px">
+                        ${html}
+                    </div>
+                `;
+
+            } catch(err) {
+                results.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+            } finally {
+                // Inject Ignore buttons for [EVENT:id] markers
+          results.innerHTML = results.innerHTML.replace(/\[EVENT:(\d+)\]\s*/g, (_, id) => {
+            return `<button onclick="(function(){var ig=JSON.parse(localStorage.getItem('blurb_ignored_events')||'[]');if(!ig.includes(+${id})){ig.push(+${id});localStorage.setItem('blurb_ignored_events',JSON.stringify(ig));}this.closest('li').style.opacity='0.3';this.textContent='✓ Ignored';this.disabled=true;}).call(this)" style="font-size:11px;padding:1px 7px;margin-right:6px;background:#eee;border:1px solid #ccc;border-radius:4px;cursor:pointer;vertical-align:middle">Ignore</button>`;
+          });
+          btn.disabled = false; btn.classList.remove('loading'); btn.textContent = '\uD83D\uDDE8\uFE0F Blurbinate!';
             }
         }
 
