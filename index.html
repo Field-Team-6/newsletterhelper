@@ -1849,7 +1849,21 @@ BUT WAIT
 ## OPENING THEME OPTIONS
 Give exactly 4 options. Each = ALL-CAPS title + one sentence on the hook/category. No favorite. No draft. No CTA.
 
-Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists. No markdown, no triple backticks.`;
+Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists. No markdown, no triple backticks.`; 
+
+                const aiResp = await fetch('/.netlify/functions/ai-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: aiPrompt })
+                });
+                const aiData = await aiResp.json();
+                const html = aiData.text || aiData.text || '<p>No response from AI.</p>';
+
+                results.innerHTML = `
+                    <div style="margin-top:24px;border-top:2px solid #e2e8f0;padding-top:20px">
+                        ${html}
+                    </div>
+                `;
 
             } catch(err) {
                 results.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
