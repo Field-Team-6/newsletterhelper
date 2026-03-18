@@ -1859,7 +1859,8 @@ Give exactly 4 options. Each = ALL-CAPS title + one sentence on the hook/categor
 Search the web right now for the 5 most recent and relevant headlines about: voter registration, voting rights, voter suppression, 2026 elections, midterms, civic activism, democracy. Rules:
 - Output NOTHING at all before the first ## heading. Not one word. No "I'll help", no "Let me search", no "Here's the framework", nothing. Start with ## immediately.
 - No "---" horizontal rules anywhere in the output
-- Format each news item as: - [Headline] (<a href="[full article URL]">[Publication Name]</a>, [date])
+- Format each news item as: - [Headline] (<a href="[full article URL]" target="_blank">[Publication Name]</a>, [date])
+- The headline text must NOT be a link. Only the publication name is linked.
 
 ## UPCOMING EVENTS TO PROMOTE
 MOBILIZE_EVENTS_PLACEHOLDER
@@ -1889,7 +1890,7 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
               const d = ts ? new Date(ts*1000) : null;
               const dateStr = d ? (d.getMonth()+1)+'/'+(d.getDate()) : '';
               const url = 'https://www.mobilize.us/ft6/event/'+e.id+'/';
-              return e.title+(dateStr?' ('+dateStr+')':'')+' - <a href="'+url+'">Sign up HERE</a>';
+              return e.title+(dateStr?' ('+dateStr+')':'')+' - <a href="'+url+'" target="_blank">HERE</a>.';
             }).join('\n');
           }
         } catch(mobErr) { mobilizeSection = '(error: '+mobErr.message+')'; }
@@ -1904,7 +1905,7 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                 const html = aiData.text || aiData.text || '<p>No response from AI.</p>';
 
                 results.innerHTML = `
-                    <div style="margin-top:24px;border-top:2px solid #e2e8f0;padding-top:20px;padding-left:0">
+                    <div style="margin-top:24px;border-top:2px solid #e2e8f0;padding-top:20px;padding-left:0;overflow:hidden">
                         ${html}
                     </div>
                 `;
@@ -1919,12 +1920,12 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                   const insertAfter = afterButWait || butWaitH2;
                   // Create banner
                   const banner = document.createElement('div');
-                  banner.style.cssText = 'margin:28px -20px 0 -20px;padding:12px 20px;background:#1a3a6b;color:#FFA703;font-family:Raleway,sans-serif;font-weight:900;font-size:18px;letter-spacing:2px;text-align:center';
+                  banner.style.cssText = 'margin:28px -40px 0 -40px;padding:12px 40px;background:#1a3a6b;color:#FFA703;font-family:Raleway,sans-serif;font-weight:900;font-size:18px;letter-spacing:2px;text-align:center;display:block';
                   banner.textContent = 'BRAINSTORM THE NEXT ONE';
                   insertAfter.insertAdjacentElement('afterend', banner);
                   // Wrap everything after banner in blue bg
                   const blueWrap = document.createElement('div');
-                  blueWrap.style.cssText = 'background:#3D9BE9;margin:0 -20px;padding:20px 20px;border-radius:0 0 12px 12px';
+                  blueWrap.style.cssText = 'background:#ebf8ff;margin:0 -40px -40px -40px;padding:24px 40px 40px 40px;border-radius:0 0 12px 12px';
                   const siblings = [];
                   let node = banner.nextElementSibling;
                   while (node) { siblings.push(node); node = node.nextElementSibling; }
