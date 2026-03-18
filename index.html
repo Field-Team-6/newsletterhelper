@@ -1962,17 +1962,12 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                       const resp = await fetch('/.netlify/functions/ai-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});
                       const data = await resp.json();
                       const newHtml = ((data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''))||data.text||'';
-                      let next = h2.nextElementSibling;
-                      while(next && next.tagName!=='H2'){const r=next;next=next.nextElementSibling;r.remove();}
-                      const tmp=document.createElement('div');const _nh=newHtml.split('## ').join('').split('##').join('');tmp.innerHTML=_nh;
-                      // Preserve ul styling to match original bullet alignment
-                      tmp.querySelectorAll('ul').forEach(ul=>{ if(!ul.style.paddingLeft) ul.style.paddingLeft='20px'; });
-                      [...tmp.children].forEach(c=>h2.parentNode.insertBefore(c,next||null));
+                      let _cw=h2.parentNode.querySelector('[data-content-wrap]');if(!_cw){_cw=document.createElement('div');_cw.dataset.contentWrap='1';h2.parentNode.insertBefore(_cw,h2.nextElementSibling&&h2.nextElementSibling.dataset&&h2.nextElementSibling.dataset.warn?h2.nextElementSibling.nextSibling:h2.nextSibling);}const _nh=newHtml.split('## ').join('').split('##').join('');_cw.innerHTML=_nh;_cw.querySelectorAll('ul').forEach(ul=>{if(!ul.style.paddingLeft)ul.style.paddingLeft='20px';});
                     } catch(e){console.error(e);}
                     if(_svg){_svg.style.cssText='';} rb.disabled=false;
                     rb.disabled=false;
                   };
-                  h2.appendChild(rb);if(rType==='themes'){const _oldWarn=h2.parentNode.querySelector('p[data-warn]');if(_oldWarn)_oldWarn.remove();const _warn=document.createElement('p');_warn.dataset.warn='1';_warn.textContent='(WARNING: ideas may be bizarre, terrible, dumb, bad, or helpful)';_warn.style.cssText='font-style:italic;font-size:12px;color:#555;margin:4px 0 0 0;';h2.parentNode.insertBefore(_warn,h2.nextSibling);}
+                  h2.appendChild(rb);if(rType==='themes'&&!h2.parentNode.querySelector('[data-content-wrap]')){const _warn=document.createElement('p');_warn.dataset.warn='1';_warn.textContent='(WARNING: ideas may be bizarre, terrible, dumb, bad, or helpful)';_warn.style.cssText='font-style:italic;font-size:12px;color:#555;margin:4px 0 0 0;';const _cw=document.createElement('div');_cw.dataset.contentWrap='1';let _s=h2.nextElementSibling;while(_s&&_s.tagName!=='H2'){const _n=_s.nextElementSibling;_cw.appendChild(_s);_s=_n;}_cw.querySelectorAll('ul').forEach(ul=>{if(!ul.style.paddingLeft)ul.style.paddingLeft='20px';});h2.parentNode.insertBefore(_warn,h2.nextSibling);h2.parentNode.insertBefore(_cw,_warn.nextSibling);}
                 });
 
 
