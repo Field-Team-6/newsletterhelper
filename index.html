@@ -1760,6 +1760,7 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
 
         
 
+        function _convertToList(cw){const ps=[...cw.querySelectorAll('p')];if(ps.length>=2&&ps[0].querySelector('strong')){const ul=document.createElement('ul');ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';ps.forEach(p=>{if(!p.querySelector('strong'))return;const li=document.createElement('li');li.innerHTML=p.innerHTML;ul.appendChild(li);p.remove();});if(ul.children.length)cw.appendChild(ul);}cw.querySelectorAll('ul').forEach(ul=>{ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';});}
         async function runBlurbinate() {
                       const btn = document.getElementById('blurbinateBtn');
           const results = document.getElementById('blurbinateResults');
@@ -1962,12 +1963,12 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                       const resp = await fetch('/.netlify/functions/ai-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});
                       const data = await resp.json();
                       const newHtml = ((data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''))||data.text||'';
-                      let _cw=h2.parentNode.querySelector('[data-content-wrap]');if(!_cw){_cw=document.createElement('div');_cw.dataset.contentWrap='1';h2.parentNode.insertBefore(_cw,h2.nextElementSibling&&h2.nextElementSibling.dataset&&h2.nextElementSibling.dataset.warn?h2.nextElementSibling.nextSibling:h2.nextSibling);}const _nh=newHtml.split('## ').join('').split('##').join('');_cw.innerHTML=_nh;_cw.querySelectorAll('ul').forEach(ul=>{ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';});
+                      let _cw=h2.parentNode.querySelector('[data-content-wrap]');if(!_cw){_cw=document.createElement('div');_cw.dataset.contentWrap='1';h2.parentNode.insertBefore(_cw,h2.nextElementSibling&&h2.nextElementSibling.dataset&&h2.nextElementSibling.dataset.warn?h2.nextElementSibling.nextSibling:h2.nextSibling);}const _nh=newHtml.split('## ').join('').split('##').join('');_cw.innerHTML=_nh;_cw.querySelectorAll('ul').forEach(ul=>{ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';});_convertToList(_cw);
                     } catch(e){console.error(e);}
                     if(_svg){_svg.style.cssText='';} rb.disabled=false;
                     rb.disabled=false;
                   };
-                  h2.appendChild(rb);if(rType==='themes'){if(!h2.parentNode.querySelector('[data-content-wrap]')){const _warn=document.createElement('p');_warn.dataset.warn='1';_warn.textContent='(WARNING: ideas may be bizarre, terrible, dumb, bad, or helpful)';_warn.style.cssText='font-style:italic;font-size:12px;color:#555;margin:4px 0 0 0;';const _cw=document.createElement('div');_cw.dataset.contentWrap='1';let _s=h2.nextElementSibling;while(_s&&_s.tagName!=='H2'){const _n=_s.nextElementSibling;_cw.appendChild(_s);_s=_n;}_cw.querySelectorAll('ul').forEach(ul=>{ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';});h2.parentNode.insertBefore(_warn,h2.nextSibling);h2.parentNode.insertBefore(_cw,_warn.nextSibling);}}
+                  h2.appendChild(rb);if(rType==='themes'){if(!h2.parentNode.querySelector('[data-content-wrap]')){const _warn=document.createElement('p');_warn.dataset.warn='1';_warn.textContent='(WARNING: ideas may be bizarre, terrible, dumb, bad, or helpful)';_warn.style.cssText='font-style:italic;font-size:12px;color:#555;margin:4px 0 0 0;';const _cw=document.createElement('div');_cw.dataset.contentWrap='1';let _s=h2.nextElementSibling;while(_s&&_s.tagName!=='H2'){const _n=_s.nextElementSibling;_cw.appendChild(_s);_s=_n;}_cw.querySelectorAll('ul').forEach(ul=>{ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';});_convertToList(_cw);_convertToList(_cw);h2.parentNode.insertBefore(_warn,h2.nextSibling);h2.parentNode.insertBefore(_cw,_warn.nextSibling);}}
                 });
 
 
