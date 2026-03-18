@@ -1866,6 +1866,7 @@ Search the web right now for the 5 most recent and relevant headlines about: vot
 
 ## UPCOMING EVENTS TO PROMOTE
 MOBILIZE_EVENTS_PLACEHOLDER
+(reproduce each event line exactly as given, do not reformat — each ends with "Sign up HERE.")
 
 FORMAT RULES for HTML output:
 - Use <h2 style="margin-top:28px;margin-bottom:6px"> for BIG NEWS, EVENTS, VOL OPS, BUT WAIT, OPENING THEME OPTIONS
@@ -1934,6 +1935,38 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                   banner.insertAdjacentElement('afterend', blueWrap);
                   siblings.forEach(n => blueWrap.appendChild(n));
                 }
+
+                // Refresh buttons on THIS WEEK'S NEWS and OPENING THEME headers
+                results.querySelectorAll('h2').forEach(h2 => {
+                  const txt = h2.textContent.trim().toUpperCase();
+                  let rType = txt.includes("THIS WEEK") ? 'news' : txt.includes("OPENING THEME") ? 'themes' : null;
+                  if (!rType) return;
+                  const rb = document.createElement('button');
+                  rb.innerHTML = '&#x21BB;';
+                  rb.title = 'Get fresh ' + (rType==='news'?'headlines':'themes');
+                  rb.style.cssText = 'margin-left:10px;background:none;border:none;font-size:22px;cursor:pointer;color:#1a3a6b;vertical-align:middle;padding:0;opacity:0.6;transition:opacity 0.2s';
+                  rb.onmouseenter=()=>rb.style.opacity='1';
+                  rb.onmouseleave=()=>rb.style.opacity='0.6';
+                  rb.onclick = async () => {
+                    rb.style.animation='spin 0.7s linear infinite';
+                    rb.disabled=true;
+                    try {
+                      const p = rType==='news'
+                        ? 'Search the web NOW for 5 fresh headlines about voter registration, voting rights, voter suppression, 2026 midterms, civic activism — DIFFERENT from any already shown. Output ONLY a <ul> with <li> items. No intro. Each item: [Headline] (<a href="[URL]" target="_blank">[Publication]</a>, [date]). Headline text must NOT be a link.'
+                        : 'Generate 4 NEW ALL-CAPS opening theme options for Field Team 6 Weekly newsletter — totally different from any shown. Output ONLY <ul><li> list, no intro. Each: <strong>TITLE</strong> &mdash; one sentence hook. Never imply cheating or violence.';
+                      const resp = await fetch('/.netlify/functions/ai-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});
+                      const data = await resp.json();
+                      const newHtml = ((data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''))||data.text||'';
+                      let next = h2.nextElementSibling;
+                      while(next && next.tagName!=='H2'){const r=next;next=next.nextElementSibling;r.remove();}
+                      const tmp=document.createElement('div');tmp.innerHTML=newHtml;
+                      [...tmp.children].forEach(c=>h2.parentNode.insertBefore(c,next||null));
+                    } catch(e){console.error(e);}
+                    rb.style.animation='';
+                    rb.disabled=false;
+                  };
+                  h2.appendChild(rb);
+                });
 
 
             } catch(err) {
