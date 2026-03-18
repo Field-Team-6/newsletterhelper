@@ -550,7 +550,9 @@
                 font-size: 15px;
             }
         }
-</style>
+        @keyframes blurb-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        .blurb-spinning { display:inline-block !important; animation:blurb-spin 0.6s linear infinite !important; }
+        </style>
 </head>
 <body>
 
@@ -1953,7 +1955,7 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                     try {
                       const p = rType==='news'
                         ? 'Search the web NOW for 5 fresh headlines about voter registration, voting rights, voter suppression, 2026 midterms, civic activism — DIFFERENT from any already shown. Output ONLY a <ul> with <li> items. No intro. Each item: [Headline] (<a href="[URL]" target="_blank">[Publication]</a>, [date]). Headline text must NOT be a link.'
-                        : 'Generate 4 NEW ALL-CAPS opening theme options for Field Team 6 Weekly newsletter — totally different from any shown. Output ONLY <ul><li> list, no intro. Each: <strong>TITLE</strong> &mdash; one sentence hook. Never imply cheating or violence.';
+                        : 'You are writing opening theme options for the Field Team 6 Weekly newsletter. Field Team 6 does in-person voter registration in swing states — partisan but with humor and humanity. Generate 4 NEW opening theme options — totally different from any shown on screen. Rules: ALL CAPS title (2-6 words ideal), punchy, mix urgency+humor+humanity, pop culture/movie/music/historical refs welcome, direct address to reader is fine, self-deprecating humor welcome. NEVER imply cheating (stack the deck, rig) or violence (fight, battle, war, contact sport, clash). Do NOT repeat a theme category used in the last 4 weeks. Recent themes used (do not repeat category): LET\'S PUT ON A SHOW (entertainment/pivot), CUT TRUMP\'S TERM IN HALF (urgency/midterms), THE RIGHT PEOPLE (milestone/pride), EMERGENCY PROTOCOLS (crisis). Output ONLY a <ul><li> list, no intro text at all. Each item: <strong>TITLE</strong> &mdash; one sentence on hook/category.';
                       const resp = await fetch('/.netlify/functions/ai-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});
                       const data = await resp.json();
                       const newHtml = ((data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''))||data.text||'';
