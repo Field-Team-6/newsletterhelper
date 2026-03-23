@@ -1803,7 +1803,7 @@ LET'S PUT ON A SHOW (Mar 2026), CUT TRUMP'S TERM IN HALF (Feb 2026), THE RIGHT P
                 // Step 4: Call AI with newsletter text + history + news search request
                 btn.classList.add('loading'); btn.disabled = true; btn.textContent = 'Blurbinatin’';
                                                 // Fetch latest newsletter from Gmail via Netlify function
-                                                setBlurbStatus('Fetching latest newsletter from Gmail…');
+                                                document.getElementById('blurbinateResults').innerHTML = '<p style="color:#555">Fetching latest newsletter from Gmail…</p>';
                                                 const nlResp = await fetch('/.netlify/functions/get-latest-newsletter');
                                                 if (!nlResp.ok) throw new Error('Failed to fetch newsletter: ' + nlResp.status);
                                                 const nlData = await nlResp.json();
