@@ -1807,19 +1807,19 @@ LET'S PUT ON A SHOW (Mar 2026), CUT TRUMP'S TERM IN HALF (Feb 2026), THE RIGHT P
                                                 let latestNewsletterDate = 'most recent';
                                                 let latestNewsletterSubject = '';
                                                 try {
-                                                    results.innerHTML = '<p style="color:#666;padding:20px">Fetching latest newsletter from Gmail…</p>';
-                                                    const gmailRes = await fetch('https://api.anthropic.com/v1/messages', {
+                                                    results.innerHTML = '<p style="color:#666;padding:20px">Fetching latest newsletter…</p>';
+                                                    const gmailRes = await fetch('/.netlify/functions/ai-check', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
                                                         body: JSON.stringify({
                                                             model: 'claude-sonnet-4-20250514',
                                                             max_tokens: 3000,
                                                             mcp_servers: [{ type: 'url', url: 'https://gmail.mcp.claude.com/mcp', name: 'gmail' }],
-                                                            messages: [{ role: 'user', content: 'Search Gmail for the most recent email from info@fieldteam6.org with subject containing "Field Team 6 Weekly". Return ONLY a JSON object with these fields: { "date": "Month D, YYYY", "subject": "the subject line", "opening": "opening theme title and 1-sentence summary", "bigNews": ["bullet 1", "bullet 2", ...], "events": ["event 1", "event 2", ...], "volOps": "one-line summary", "butWait": ["item 1", "item 2"] }. No other text.' }]
+                                                            prompt: 'Search Gmail for the most recent email from info@fieldteam6.org with subject containing "Field Team 6 Weekly". Return ONLY a JSON object with these fields: { "date": "Month D, YYYY", "subject": "the subject line", "opening": "opening theme title and 1-sentence summary", "bigNews": ["bullet 1", "bullet 2", ...], "events": ["event 1", "event 2", ...], "volOps": "one-line summary", "butWait": ["item 1", "item 2"] }. No other text.'
                                                         })
                                                     });
                                                     const gmailData = await gmailRes.json();
-                                                    const gmailText = (gmailData.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+                                                    const gmailText = gmailData.text || '';
                                                     const jsonMatch = gmailText.match(/\{[\s\S]*\}/);
                                                     if (jsonMatch) {
                                                         const nl = JSON.parse(jsonMatch[0]);
