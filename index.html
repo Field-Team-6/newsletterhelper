@@ -1802,52 +1802,22 @@ LET'S PUT ON A SHOW (Mar 2026), CUT TRUMP'S TERM IN HALF (Feb 2026), THE RIGHT P
 
                 // Step 4: Call AI with newsletter text + history + news search request
                 btn.classList.add('loading'); btn.disabled = true; btn.textContent = 'Blurbinatin’';
-                                                // Newsletter content — updated each week from Gmail
-                                                // To update: replace NEWSLETTER_BODY and NEWSLETTER_DATE below with content from latest issue
-                                                // From: dale@fieldteam6.ccsend.com — search "Field Team 6 Weekly" in jason@fieldteam6.org
+                                                // Fetch latest newsletter from Gmail via Netlify function
+                                                setBlurbStatus('Fetching latest newsletter from Gmail…');
+                                                const nlResp = await fetch('/.netlify/functions/get-latest-newsletter');
+                                                if (!nlResp.ok) throw new Error('Failed to fetch newsletter: ' + nlResp.status);
+                                                const nlData = await nlResp.json();
+                                                if (nlData.error) throw new Error('Newsletter fetch error: ' + nlData.error);
 
-                                                const NEWSLETTER_DATE = 'March 19, 2026';
-                                                const NEWSLETTER_BODY = `OUR TURN TO LEAD — by Gregg Millman, Newsletter Team
+                                                // Strip HTML tags from body for plain-text AI prompt
+                                                const tmpDiv = document.createElement('div');
+                                                tmpDiv.innerHTML = nlData.body || '';
+                                                const NEWSLETTER_BODY = tmpDiv.innerText.trim();
+                                                const NEWSLETTER_DATE = nlData.date
+                                                  ? new Date(nlData.date).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})
+                                                  : '(unknown date)';
 
-OPENING: OUR TURN TO LEAD
-I don't know about you, but it's been a while since I was inspired by a politician's words on the state of our nation. So where are the leaders we need right now? They're right here, at our voter drives, postcard parties, and text arcades. In 2026, it's on us. No spotlights. No stages. Just people doing the work. We're the ones who have to pick a destination: democracy. We're the ones who have to choose a path: voter registration. We're the ones who have to find our fellow travelers: Field Team 6ers.
-
-BIG NEWS
-
-MARCH 28: LET'S TURN NO KINGS III INTO 2,800 VOTER DRIVES!
-Over 2,800 No Kings events planned nationwide. We want a voter drive at every single one. Email helpmydrive@fieldteam6.org for help. Recruit new volunteers with sign-up sheets after drives. Resources: Voter Drive in a Box, Printable Tools, t-shirts with QR codes.
-
-FLIP MAINE, FLIP THE SENATE! TEXT ARCADE TUES
-First text arcade into Maine on Tuesday, 3/24 at 3p PT/6p ET. Sign up now. $1,000 = 25,000 texts; $100 = 20,000 emails; $60 = free voter drive kit.
-
-EVENTS
-
-SATURDAY, MARCH 21 AND BEYOND: IN-PERSON DRIVES IN KEY SWING STATES!
-2/3 of volunteers who lead a drive go on to lead another. Upcoming dates:
-PA (Glen Mills) – Sat 3/21 at 9a | CA (Norwalk) – Tue 3/24 at 10:30a | MI (East Lansing) – Wed 3/25 at 10:30a | CA (Sacramento) – Wed 3/25 at 10a | GA (Columbus) – Thu 3/26 at 5:30p | GA (Columbus) – Sat 3/28 at 9:30a | GA (Savannah) – Sat 3/28 at 12p | NV (Henderson) – Sat 3/28 NO KINGS at 9:30a | CA (Woodland Hills) – Sat 3/28 NO KINGS at 9:30a | CA (Santa Monica) – Sat 3/28 NO KINGS at 10a | CA (Ventura) – Sat 3/28 NO KINGS at 10a | CA (West Sacramento) – Sat 3/28 NO KINGS at 10:30a | CA (Los Angeles) – Sat 3/28 NO KINGS at 11a | CA (Culver City) – Sat 3/28 NO KINGS at 11a | AZ (Flagstaff) – Sat 3/28 NO KINGS at 12p | CA (Los Angeles) – Sat 3/28 NO KINGS at 1:30p | CA (Palm Desert) – Thu 4/9 at 11a | OR (Portland) – Sat 4/11 and Mon 4/13 at 11a | CA (Long Beach) – Tue 4/21 at 6p | MI (Lansing) – Tue 4/28 | CA (Davis) – Fri 5/8
-
-SATURDAY, MARCH 21: PARTY PREP, POSTCARD STYLE!
-Joyce Mercado shows how to host a postcard party or prep porch packet pickups. Sat 3/21 at 11a PT/2p ET.
-
-THURSDAY, APRIL 2: TIME TO MAKE THE DONUTS & DEMOCRACY!
-Joint fundraiser with Donuts+Democracy to fund student voter registration. Thu 4/2 at 5p PT/8p ET. Funds split between FT6 and Donuts+Democracy.
-
-VOLUNTEER OPS
-In-person voter drives (CA/GA/MI/NV/PA/AZ/OR); postcarding AZ/CO/GA/IA/ME/NC/NE/NJ/PA; texting (Text Arcades back with celebs!); Social Storming (Bluesky/Insta/WhatsApp); PleaseGrowASpine.org training.
-
-BUT WAIT, THERE'S MORE!
-
-IMPORTANT ASK FOR OUR RECURRING DONORS! (AND IT'S NOT MONEY!)
-Due to legal technicalities, recurring donors must migrate to a new ActBlue page. Set up new recurring donation and email FT6 to cancel old page. 24/7/365 Club also available.
-
-NC PRE-PRINTED POSTCARDS NEED YOU!
-Pre-addressed, pre-printed NC postcard kits with artwork by James McMullan. No hand cramps. Just add name and personal flair. Available for NC residents and out-of-state supporters.
-
-NEW SHIRT, WHO DIS?!
-New rainbow "I can help you register to vote!" shirt with QR code to Voterizer.org now in the store.`;
-
-                                                const d = new Date(NEWSLETTER_DATE);
-                                                const nlDateShort = (d.getMonth()+1) + '/' + d.getDate() + '/' + String(d.getFullYear()).slice(2);
+                                                const nlDateShortconst nlDateShort = (d.getMonth()+1) + '/' + d.getDate() + '/' + String(d.getFullYear()).slice(2);
                                                 const today = new Date();
                                                 const daysToThurs = (4 - today.getDay() + 7) % 7 || 7;
                                                 const nextThurs = new Date(today); nextThurs.setDate(today.getDate() + daysToThurs);
