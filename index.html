@@ -1049,7 +1049,7 @@
                                 result.checks.push({field:'DateTime', icon:'⚠️', listed:'Could not parse time from newsletter text — check manually', actual:dt.full, ok:false});
                             } else {
                                 result.checks.push({field:'DateTime', icon:'ℹ️', listed:'Used as general signup link — no event date in newsletter text', actual:dt.full, ok:null});
-                                result.ok = true;
+                                result._signupLink = true;
                             }
                             allOk = false;
                         } else {
@@ -1059,9 +1059,10 @@
                         result.checks.push({field:'Location', icon:'ℹ️', listed:'', actual:(loc&&loc.locality)?(loc.region+' ('+loc.locality.toUpperCase()+')') : '💻 Virtual event', ok:null});
                     }
                 }
-                result.status=allOk?'pass':'fail';
-                result.icon=allOk?'✅':'❌';
-                result.message=allOk?'All details verified':'⚠ Mismatch — see details';
+                const effectiveOk = result._signupLink ? true : allOk;
+                result.status=effectiveOk?'pass':'fail';
+                result.icon=effectiveOk?'✅':'❌';
+                result.message=effectiveOk?'All details verified':'⚠ Mismatch — see details';
                 return result;
             }
 
