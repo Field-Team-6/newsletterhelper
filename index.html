@@ -1193,6 +1193,7 @@ Answer in this exact JSON format (no other text):
 {"correct": true/false, "confidence": "high"/"medium"/"low", "reason": "one sentence explanation"}`;
 
             try {
+                results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (this takes ~15s)</p>';
                 const aiRes = await fetch('/.netlify/functions/ai-check', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
@@ -1829,7 +1830,7 @@ LET'S PUT ON A SHOW (Mar 2026), CUT TRUMP'S TERM IN HALF (Feb 2026), THE RIGHT P
                                                 const nextThurs = new Date(today); nextThurs.setDate(today.getDate() + daysToThurs);
                                                 const nextDateStr = nextThurs.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
 
-                                                let aiPrompt = `CRITICAL INSTRUCTION: Your response must begin IMMEDIATELY with "## LAST NEWSLETTER SUMMARY (${nlDateShort})" — no other text before it. Do not write any introduction, greeting, or preamble of any kind.
+                                                let aiPrompt = `CRITICAL INSTRUCTION: Your response must begin IMMEDIATELY with "## LAST NEWSLETTER SUMMARY (${nlDateShort}) [USE THIS DATE EXACTLY — do not use the date from inside the newsletter]" — no other text before it. Do not write any introduction, greeting, or preamble of any kind.
 
 You are helping write the next Field Team 6 Weekly newsletter (going out around ${nextDateStr}).
 
@@ -1953,7 +1954,13 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                         ${cleanHtml}
                     </div>
                 `;
-                clearInterval(_dotInterval); btn.textContent = '💬 Blurbinate!';
+                requestAnimationFrame(() => { clearInterval(_dotInterval); btn.textContent = '💬 Blurbinate!'; });
+                // Strip spurious AI preamble (any <p> before first <h2>)
+                const firstH2 = results.querySelector('h2');
+                if (firstH2) {
+                  let prev = firstH2.previousElementSibling;
+                  while (prev) { const toRm = prev; prev = prev.previousElementSibling; toRm.remove(); }
+                }
                 // Strip any content under VOL OPS heading
                 results.querySelectorAll('h2').forEach(h2 => {
                   if (h2.textContent.trim().toUpperCase() === 'VOL OPS') {
@@ -2004,7 +2011,7 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                 });
 
                 // Refresh buttons on THIS WEEK'S NEWS and OPENING THEME headers
-                results.querySelectorAll('h2').forEach(h2 => {
+                results.parentElement.querySelectorAll('h2').forEach(h2 => {
                   const txt = h2.textContent.trim().toUpperCase();
                   let rType = txt.includes("THIS WEEK") ? 'news' : txt.includes("OPENING THEME") ? 'themes' : null;
                   if (!rType) return;
