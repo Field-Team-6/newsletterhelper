@@ -1817,6 +1817,7 @@ LET'S PUT ON A SHOW (Mar 2026), CUT TRUMP'S TERM IN HALF (Feb 2026), THE RIGHT P
                                                   ? new Date(nlData.date).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})
                                                   : '(unknown date)';
 
+                                                const d = new Date(nlData.date || Date.now());
                                                 const nlDateShort = (d.getMonth()+1) + '/' + d.getDate() + '/' + String(d.getFullYear()).slice(2);
                                                 const today = new Date();
                                                 const daysToThurs = (4 - today.getDay() + 7) % 7 || 7;
