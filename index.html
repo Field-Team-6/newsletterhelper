@@ -1801,6 +1801,9 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
         async function runBlurbinate() {
                       const btn = document.getElementById('blurbinateBtn');
           const results = document.getElementById('blurbinateResults');
+          btn.disabled = true;
+          results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (this takes ~15s)</p>';
+          results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">📡 Fetching newsletter…</p>';
 try {
                 // Step 1: Fetch latest newsletter via proof URL saved by Tool 3
                 const savedProofUrl = (() => { try { return localStorage.getItem('ft6_last_proof_url') || ''; } catch(e) { return ''; } })();
@@ -1824,7 +1827,7 @@ try {
 LET'S PUT ON A SHOW (Mar 2026), CUT TRUMP'S TERM IN HALF (Feb 2026), THE RIGHT PEOPLE (Feb 2026), EMERGENCY PROTOCOLS (Jan 2026), THERE IS NOW A PATH TO THE SENATE (Jan 2026), LOVE AND A PLAN (Jan 2026), TWO HOT DOGS EXTRA ONIONS AND MUSTARD (Dec 2025), REDISCOVER LOVE (Dec 2025), TECTONIC (Dec 2025), GIVING THANKS (Nov 2025), ORGANIZING TURNS THE IMPOSSIBLE INTO REALITY (Nov 2025), HONOR YOUR RIGHTEOUS WRATH (Nov 2025), SING IT (Nov 2025), THROUGH THE RIBBON (Oct 2025), ANYTHING IS POSSIBLE (Oct 2025), REMEMBER YOU EXIST (Oct 2025), STAY LOUD STAY UNITED STAY BRAVE (Sep 2025), MAKE HISTORY WITH US (Sep 2025), NONVIOLENCE IS THE WAY FORWARD (Sep 2025), WE WON'T BACK DOWN (Sep 2025), UPSET VICTORY FOR THE RESISTANCE (Aug 2025), LAUNCHING BIGGEST IN-PERSON VOTER DRIVE CAMPAIGN SINCE CIVIL RIGHTS (Aug 2025), FROM THE SWAMP TO THE HARBOR (Aug 2025), DEMOCRATS SHOW A SPINE (Aug 2025), 10000 HOURS AND THE MATH OF MOVEMENTS (Jul 2025), DOOM-SKIPPING AND HOPE-SCROLLING (Jul 2025), DO IT FOR JOHN LEWIS (Jul 2025), BIG BEAUTIFUL BLUE WAVE COMING (Jul 2025), HOLLYWOOD NEEDS HEROES (Jun 2025), BIGGEST PROTEST IN HISTORY 5 MONTHS IN (Jun 2025), A WILDFIRE OF INSPIRATION (Jun 2025), LISTEN TO THE BOSS (Jun 2025), MISSION IMPOSSIBLE (May 2025), STICK TO THE ANTI-AUTOCRACY PLAYBOOK (May 2025), NEW PROBLEMS NEED NEW SOLUTIONS (May 2025), NOBODY KNOWS THIS (Apr 2025), NO GREATER POWER THAN THE PEOPLE (Apr 2025), PLEASE GROW A SPINE DOT ORG (Apr 2025), LANDSLIDE VICTORY FOR DEMOCRACY (Apr 2025), BREAKING UNBROKEN WINNING STREAK (Mar 2025), FIST IN THE AIR (Mar 2025), NO BLANK CHECK FOR TRUMP/MUSK (Mar 2025), HOW WE SURVIVE (Mar 2025), 3 BIG IDEAS (Feb 2025), CONTEST EVERY RACE (Feb 2025), TAKING IT TO THE STREETS (Feb 2025), DAMN THE TORPEDOES (Feb 2025), STOP THE MAGA VOTER SUPPRESSION BILL (Jan 2025), WE ARE BACK (Jan 2025), DAY ONE (Jan 2025), LETTER OF HOPE FROM HELL (Jan 2025)`;
 
                 // Step 4: Call AI with newsletter text + history + news search request
-                                                let _dotCount = 0; const _dotInterval = setInterval(() => { _dotCount = _dotCount >= 3 ? 1 : _dotCount + 1; btn.textContent = 'Blurbinatin’' + '.'.repeat(_dotCount); }, 300);
+                                                results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (this takes ~15s)</p>';
                                                 const today = new Date();
                                                 const daysToThurs = (4 - today.getDay() + 7) % 7 || 7;
                                                 const nextThurs = new Date(today); nextThurs.setDate(today.getDate() + daysToThurs);
