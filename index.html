@@ -1615,7 +1615,7 @@ RULES TO CHECK:
 - CRITICAL: The word "democracy" (the concept/system of government) is ALWAYS lowercase when used as a common noun. "democracy" ✓, "Democracy" ✗. Do NOT flag "democracy" as a capitalization error — it is never capitalized unless it is part of an ALL-CAPS title or a proper event name like "DONUTS & DEMOCRACY".
 - Do NOT flag if a word appears in an all-caps heading/title — capitalization rules don't apply to all-caps text.
 - Only flag when context makes it unmistakably clear which meaning is intended. Do NOT flag ambiguous cases.
-3. MISSING APOSTROPHES: Flag contractions missing their apostrophe anywhere in the text (not just headings). CRITICAL: Both straight apostrophes (') and curly/smart apostrophes (’) are VALID — do NOT flag a word just because it uses a curly apostrophe. Only flag words that are missing an apostrophe entirely. Common examples of REAL errors: "LETS" (no apostrophe at all) should be "LET'S", "DONT" should be "DON'T", "CANT" should be "CAN'T", "WONT" should be "WON'T", "DIDNT" should be "DIDN'T", "ITS" used as a contraction (meaning "it is") should be "IT'S", "YOURE" should be "YOU'RE", "THEYRE" should be "THEY'RE", "WERE" used as contraction should be "WE'RE", "WOULDNT" should be "WOULDN'T", "COULDNT" should be "COULDN'T". Be careful: "ITS" as a possessive is correct without apostrophe.
+3. MISSING APOSTROPHES: Flag contractions missing their apostrophe anywhere in the text (not just headings). CRITICAL: Both straight apostrophes (') and curly/smart apostrophes (’) are VALID — do NOT flag a word just because it uses a curly apostrophe. Only flag words that are missing an apostrophe entirely. Common examples of REAL errors: "LETS" (no apostrophe at all) should be "LET'S", "DONT" should be "DON'T", "CANT" should be "CAN'T", "WONT" should be "WON'T", "DIDNT" should be "DIDN'T", "ITS" used as a contraction (meaning "it is") should be "IT'S", "YOURE" should be "YOU'RE", "THEYRE" should be "THEY'RE", "WERE" used as contraction should be "WE'RE", "WOULDNT" should be "WOULDN'T", "COULDNT" should be "COULDN'T". Be careful: "ITS" as a possessive is correct without apostrophe. EXCEPTION: Do NOT flag informal/colloquial words like 'em (short for 'them'), 'cause, 'til, par-tay, or other intentional informal spellings. These are stylistic choices, not errors.
 4. PROFANITY: flag any profanity or potentially offensive language (informational — may be intentional)
 5. DOUBLE SPACES: two or more spaces between sentences or words
 6. IN-PERSON HYPHENATION: Be VERY conservative — only flag clear errors. Rules:
@@ -1725,6 +1725,8 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
                 'DOUBLE SPACE::LET\'S PUT ON A SHOW!',
                 'TYPO::turn one of those get-togethers or shindigs into a postcarding par-tay!',
                 'TYPO::postcarding par-tay!',
+                'TYPO::par-tay',
+                'TYPO::par-tay!',
                 'CAPITALIZATION::REGISTER DEMS BY POSTCARD!',
         ];
 
@@ -1920,17 +1922,19 @@ BIG NEWS
 - [date if applicable] - [blurb title]
 
 EVENTS
-- In-person Voter Drives
-- [named event title] ([date])
-- [named event title] ([date])
-(list ONLY named events like postcard parties, social storms, fundraisers, trainings — NOT individual voter drive locations)
+- In-person Voter Drives ([date range])
+- [exact blurb title as written in newsletter] ([date])
+- [exact blurb title as written in newsletter] ([date])
+(Use the EXACT title from each newsletter event blurb heading — do not paraphrase. Include named events only: postcard parties, social storms, fundraisers, trainings, text arcades — NOT individual voter drive city locations.)
 
 VOL OPS
 (heading only — no bullet points, no content)
 
 BUT WAIT
-- [title]
-- [title]
+- [exact blurb title as written in newsletter]
+- [exact blurb title as written in newsletter]
+- [exact blurb title as written in newsletter]
+(Use the EXACT title from each BUT WAIT section blurb heading — do not paraphrase.)
 
 
 
