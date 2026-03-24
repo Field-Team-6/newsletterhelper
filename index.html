@@ -1821,7 +1821,7 @@ LET'S PUT ON A SHOW (Mar 2026), CUT TRUMP'S TERM IN HALF (Feb 2026), THE RIGHT P
                                                 const proofUrl = proofUrlInput && proofUrlInput.value.trim().includes('constantcontact') ? proofUrlInput.value.trim() : null;
 
                                                 if (proofUrl) {
-                                         let nlDateShort = d.toLocaleString('en-US', {month:'short', day:'numeric', year:'numeric'})                                               results.innerHTML = '<p style="color:#666;padding:20px">Fetching latest newsletter…</p>';
+                                         let nlDateShort = d.toLocaleString('en-US', {month:'short', day:'numeric', year:'numeric'});                                               results.innerHTML = '<p style="color:#666;padding:20px">Fetching latest newsletter…</p>';
                                                         const proofRes = await fetch('/.netlify/functions/fetch-proof', {
                                                             method: 'POST',
                                                             headers: {'Content-Type': 'application/json'},
