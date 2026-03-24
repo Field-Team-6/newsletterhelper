@@ -89,7 +89,7 @@ exports.handler = async function(event, context) {
 
     const searchResult = await get({
       hostname: 'gmail.googleapis.com',
-      path: '/gmail/v1/users/me/messages?q=from:info%40fieldteam6.org+%22Field+Team+6+Weekly%22&maxResults=5',
+      path: '/gmail/v1/users/me/messages?q=from:fieldteam6.org+newer_than%3A30d&maxResults=10',
       headers: { Authorization: 'Bearer ' + accessToken }
     });
 
@@ -97,9 +97,22 @@ exports.handler = async function(event, context) {
       return { statusCode: 404, headers, body: JSON.stringify({ error: 'No newsletters found' }) };
     }
 
-    // Sort by internalDate descending to get the truly newest
-    const sortedMsgs = searchResult.messages; // Gmail already returns newest first
-    const messageId = sortedMsgs[0].id;
+    // Fetch metadata for top results to find the one with highest internalDate
+    let messageId = searchResult.messages[0].id;
+    if (searchResult.messages.length > 1) {
+      const metaFetches = searchResult.messages.slice(0, 5).map(m =>
+        get({ hostname: 'gmail.googleapis.com', path: '/gmail/v1/users/me/messages/' + m.id + '?format=metadata&metadataHeaders=Subject', headers: { Authorization: 'Bearer ' + accessToken } })
+      );
+      const metas = await Promise.all(metaFetches);
+      // Filter to only newsletters (subject contains "Field Team 6 Weekly") and pick newest
+      const newsletters = metas.filter(m => {
+        const subj = (m.payload && m.payload.headers || []).find(h => h.name.toLowerCase() === 'subject');
+        return subj && subj.value.includes('Field Team 6 Weekly');
+      });
+      const pool = newsletters.length > 0 ? newsletters : metas;
+      pool.sort((a, b) => Number(b.internalDate) - Number(a.internalDate));
+      messageId = pool[0].id;
+    }
 
     const message = await get({
       hostname: 'gmail.googleapis.com',
