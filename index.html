@@ -1194,8 +1194,6 @@ Answer in this exact JSON format (no other text):
 
             try {
                 results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (this takes ~15s)</p>';
-                window._blurbDC = 0; window._blurbDI = setInterval(() => { window._blurbDC = (window._blurbDC % 3) + 1; btn.textContent = 'Blurbinatin’' + '.'.repeat(window._blurbDC); }, 300);
-                results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (~15s)</p>';
                 const aiRes = await fetch('/.netlify/functions/ai-check', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
@@ -1945,6 +1943,8 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
         } catch(mobErr) { mobilizeSection = '(error: '+mobErr.message+')'; }
         aiPrompt = aiPrompt.split('MOBILIZE_EVENTS_PLACEHOLDER').join(mobilizeSection);
 
+        window._blurbDC = 0; window._blurbDI = setInterval(() => { window._blurbDC = (window._blurbDC % 3) + 1; btn.textContent = 'Blurbinatin’' + '.'.repeat(window._blurbDC); }, 300);
+        results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (~15s)</p>';
         const aiResp = await fetch('/.netlify/functions/ai-check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
