@@ -1655,7 +1655,7 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
                 const raw = (aiData.text || '').replace(/\x60\x60\x60json|\x60\x60\x60/g,'').trim();
 
                 let issues = [];
-                const _jsonStart = raw.indexOf('{'); const _cleaned = _jsonStart >= 0 ? raw.substring(_jsonStart) : raw; try { issues = JSON.parse(_cleaned); } catch(e) { throw new Error('AI returned unparseable response. Try again.'); }
+                const _braceIdx = raw.indexOf('{'); const _bracketIdx = raw.indexOf('['); const _jsonStart = _braceIdx >= 0 && _bracketIdx >= 0 ? Math.min(_braceIdx, _bracketIdx) : Math.max(_braceIdx, _bracketIdx); const _cleaned = _jsonStart >= 0 ? raw.substring(_jsonStart) : raw; const _stripped = _cleaned.replace(/```[\s\S]*$/, '').trim(); try { issues = JSON.parse(_stripped); } catch(e) { throw new Error('AI returned unparseable response. Try again.'); }
 
                 // Render results
                 output.classList.add('visible');
