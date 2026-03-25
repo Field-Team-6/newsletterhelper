@@ -1798,47 +1798,40 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
 
         function _convertToList(cw){const ps=[...cw.querySelectorAll('p')];if(ps.length>=2&&ps[0].querySelector('strong')){const ul=document.createElement('ul');ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';ps.forEach(p=>{if(!p.querySelector('strong'))return;const li=document.createElement('li');li.innerHTML=p.innerHTML;ul.appendChild(li);p.remove();});if(ul.children.length)cw.appendChild(ul);}cw.querySelectorAll('ul').forEach(ul=>{ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';});}
         async function runBlurbinateSection(sectionName, h2El, rbBtn) {
-          // Spin the button
+          var svgIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a3a6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>';
           rbBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a3a6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>';
           rbBtn.disabled = true;
           try {
-            // Get current content of this section (everything until next h2 or end)
-            let sibling = h2El.nextSibling;
-            let currentContent = '';
-            while (sibling && sibling.nodeName !== 'H2') {
-              currentContent += sibling.textContent || '';
-              sibling = sibling.nextSibling;
-            }
-            const isThemes = sectionName.includes('OPENING THEME');
-            const sectionPrompt = isThemes
-              ? `The Field Team 6 newsletter needs 4 fresh opening theme ideas for next week. Return ONLY 4 bold theme titles (ALL CAPS, 3-6 words) each followed by an em dash and one sentence description. No intro text, no numbering.`
-              : `Search for the latest voter registration, voter suppression, and election news from this week. Return ONLY a bullet list of 4-6 news items, each with the headline source linked and date. No intro text.`;
-            const aiRes = await fetch('/.netlify/functions/ai-check', {
+            var isThemes = sectionName === 'themes';
+            var prompt = isThemes
+              ? 'Give me 4 fresh opening theme ideas for the Field Team 6 newsletter next week. Return ONLY 4 lines, each: THEME TITLE (ALL CAPS, 3-6 words) — one sentence description. No intro, no numbering, no markdown.'
+              : 'Search for the latest voter registration, voter suppression, and election news from the past week. Return ONLY a bullet list of 4-6 items in this format: <li><strong>Headline</strong> — one sentence summary (<a href="URL">Source</a>, Date)</li>. No intro text.';
+            var aiRes = await fetch('/.netlify/functions/ai-check', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({prompt: sectionPrompt, model: 'claude-haiku-4-5-20251001', max_tokens: 1000}),
+              body: JSON.stringify({prompt: prompt, model: 'claude-haiku-4-5-20251001', max_tokens: 800}),
               signal: AbortSignal.timeout(30000)
             });
-            const aiData = await aiRes.json();
-            const newText = aiData.text || '';
+            var aiData = await aiRes.json();
+            var newText = (aiData.text || '').trim();
             if (!newText) throw new Error('No response');
-            // Replace content between this h2 and the next h2
-            const newDiv = document.createElement('div');
-            newDiv.innerHTML = newText.replace(/##\s*/g, '');
-            let toRemove = [];
-            let sib = h2El.nextSibling;
+            // Remove old content between this h2 and next h2
+            var toRemove = [];
+            var sib = h2El.nextSibling;
             while (sib && sib.nodeName !== 'H2') { toRemove.push(sib); sib = sib.nextSibling; }
-            toRemove.forEach(n => n.remove());
+            toRemove.forEach(function(n) { n.remove(); });
             // Insert new content after h2
-            let insertRef = h2El;
-            while (newDiv.firstChild) {
-              h2El.parentNode.insertBefore(newDiv.firstChild, insertRef.nextSibling);
-              insertRef = insertRef.nextSibling;
+            var tmp = document.createElement('div');
+            tmp.innerHTML = newText;
+            var ref = h2El;
+            while (tmp.firstChild) {
+              h2El.parentNode.insertBefore(tmp.firstChild, ref.nextSibling);
+              ref = ref.nextSibling;
             }
           } catch(e) {
-            rbBtn.title = 'Error: ' + e.message + ' — click to retry';
+            rbBtn.title = 'Error — click to retry';
           } finally {
-            rbBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a3a6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>';
+            rbBtn.innerHTML = svgIcon;
             rbBtn.disabled = false;
           }
         }
@@ -2087,20 +2080,18 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                 results.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
             
                 // Add refresh buttons next to OPENING THEME IDEAS and THIS WEEK'S NEWS
-                results.querySelectorAll('h2').forEach(h2 => {
-                  const txt = h2.textContent.trim();
-                  if (txt.includes('OPENING THEME') || txt.includes("THIS WEEK")) {
-                    const rb = document.createElement('button');
+                results.querySelectorAll('h2').forEach(function(h2) {
+                  var txt = h2.textContent.trim();
+                  if (txt.indexOf('OPENING THEME') >= 0 || txt.indexOf('THIS WEEK') >= 0) {
+                    var rb = document.createElement('button');
                     rb.title = 'Regenerate this section';
                     rb.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a3a6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>';
-                    rb.style.cssText = 'margin-left:8px;background:#ebf0ff;border:1px solid #b8c4e0;cursor:pointer;vertical-align:middle;padding:3px;border-radius:50%;transition:background 0.2s;line-height:0';
-                    rb.onmouseenter = () => rb.style.background = '#d0d8f0';
-                    rb.onmouseleave = () => rb.style.background = '#ebf0ff';
-                    const sectionName = txt.includes('OPENING THEME') ? 'OPENING THEME IDEAS' : "THIS WEEK'S NEWS";
-                    rb.onclick = () => runBlurbinateSection(sectionName, h2, rb);
+                    rb.style.cssText = 'margin-left:8px;background:#ebf0ff;border:1px solid #b8c4e0;cursor:pointer;vertical-align:middle;padding:3px;border-radius:50%;line-height:0';
+                    var sectionName = txt.indexOf('OPENING THEME') >= 0 ? 'themes' : 'news';
+                    rb.onclick = (function(sn, h, r) { return function() { runBlurbinateSection(sn, h, r); }; })(sectionName, h2, rb);
                     h2.appendChild(rb);
                   }
-                });                });
+                });
 } finally {
                 btn.disabled = false; btn.classList.remove('loading');
             }
