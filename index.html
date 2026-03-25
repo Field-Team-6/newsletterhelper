@@ -1507,7 +1507,6 @@ Answer in this exact JSON format (no other text):
             output.classList.remove('visible');
             results.innerHTML = '';
             btn.disabled = true;
-            btn.innerHTML = 'Fetching newsletter<span class="loading"></span>';
 
             try {
                 // Auto-fill from Tool 3 if empty
@@ -1800,8 +1799,7 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
         async function runBlurbinate() {
                       const btn = document.getElementById('blurbinateBtn');
           const results = document.getElementById('blurbinateResults');
-          btn.disabled = true; btn.innerHTML = '🤖 Blurbinate!<span class="loading"></span>';
-          results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">📡 Fetching newsletter…</p>';
+          btn.disabled = true; btn.innerHTML = '🤖 Blurbinatin’<span class="loading"></span>';
 try {
                 // Step 1: Fetch latest newsletter via proof URL saved by Tool 3
                 const savedProofUrl = (() => { try { return localStorage.getItem('ft6_last_proof_url') || ''; } catch(e) { return ''; } })();
