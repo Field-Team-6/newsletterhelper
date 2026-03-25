@@ -1195,6 +1195,7 @@ Answer in this exact JSON format (no other text):
             try {
                 results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (this takes ~15s)</p>';
                 let _dotCount = 0; const _dotInterval = setInterval(() => { _dotCount = _dotCount >= 3 ? 1 : _dotCount + 1; btn.textContent = 'Blurbinatin’' + '.'.repeat(_dotCount); }, 300);
+                results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (~15s)</p>';
                 const aiRes = await fetch('/.netlify/functions/ai-check', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
@@ -1648,6 +1649,7 @@ Respond ONLY with a JSON array of issues. Each issue object must have:
 If NO issues found return []. Return ONLY the JSON array, no other text.`;
 
                 let _dotCount = 0; const _dotInterval = setInterval(() => { _dotCount = _dotCount >= 3 ? 1 : _dotCount + 1; btn.textContent = 'Blurbinatin’' + '.'.repeat(_dotCount); }, 300);
+                results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">🤖 Asking AI… (~15s)</p>';
                 const aiRes = await fetch('/.netlify/functions/ai-check', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
@@ -1805,7 +1807,7 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
           const results = document.getElementById('blurbinateResults');
           btn.disabled = true;
           results.innerHTML = '<p style="color:#666;padding:12px 0;font-style:italic">📡 Fetching newsletter…</p>';
-try {try {
+try {
                 // Step 1: Fetch latest newsletter via proof URL saved by Tool 3
                 const savedProofUrl = (() => { try { return localStorage.getItem('ft6_last_proof_url') || ''; } catch(e) { return ''; } })();
                 if (!savedProofUrl) throw new Error('No newsletter saved yet — run Tool 3 (Proof Link Checker) on Thursday with the Constant Contact proof URL and Blurbinate will remember it.');
