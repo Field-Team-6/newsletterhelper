@@ -1953,12 +1953,12 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                     </div>
                 `;
                 btn.disabled = false; btn.innerHTML = '🤖 Blurbinate!';
-                // Strip spurious AI preamble (text nodes + elements before first h2)
+                // Strip any preamble text before first h2
                 const firstH2 = results.querySelector('h2');
-                if (firstH2) {
-                  Array.from(results.childNodes).forEach(n => { if (!firstH2.contains(n) && n !== firstH2) n.remove(); });
-                }
-                // Strip any content under VOL OPS heading
+                if (firstH2 && firstH2.parentNode === results) {
+                  let prev = firstH2.previousSibling;
+                  while (prev) { const toRm = prev; prev = prev.previousSibling; toRm.remove(); }
+                }                // Strip any content under VOL OPS heading
                 results.querySelectorAll('h2').forEach(h2 => {
                   if (h2.textContent.trim().toUpperCase() === 'VOL OPS') {
                     let next = h2.nextElementSibling;
