@@ -1988,7 +1988,12 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                 const aiData = await aiResp.json();
                 const html = aiData.text || aiData.text || '<p>No response from AI.</p>';
 
-                const cleanHtml = html.replace(/##\s*/g,'');
+                var cleanHtml = html.replace(/##\s*/g,'');
+                var _tmpDiv = document.createElement('div');
+                _tmpDiv.innerHTML = cleanHtml;
+                _tmpDiv.querySelectorAll('li').forEach(function(li) { if (li.querySelector('a')) { var p = document.createElement('p'); p.style.margin = '0.5em 0'; p.innerHTML = li.innerHTML; li.replaceWith(p); } });
+                _tmpDiv.querySelectorAll('ul').forEach(function(ul) { if (!ul.querySelector('li')) { while (ul.firstChild) ul.parentNode.insertBefore(ul.firstChild, ul); ul.remove(); } });
+                cleanHtml = _tmpDiv.innerHTML;
                 results.innerHTML = `
                     <div style="margin:24px -40px -40px -40px;border-top:2px solid #e2e8f0;padding:20px 40px 0 40px;overflow:hidden">
                         ${cleanHtml}
