@@ -1808,11 +1808,11 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
             var isThemes = sectionName === 'themes';
             var prompt = isThemes
               ? 'You are a creative writer for Field Team 6 (FT6), a grassroots organization that registers Democratic voters in swing states. FT6 has registered 8.3 million voters. Their motto: Register Democrats. Save the world. They use humor, humanity, and urgency. Current priorities: 2026 midterm elections, No Kings protests and voter drives, $3M fundraising goal, 3 million new votes.\n\nRecent newsletter themes to AVOID repeating:\n- LETS PUT ON A SHOW (Mar 2026)\n- CUT TRUMPS TERM IN HALF (Feb 2026)\n- THE RIGHT PEOPLE (Feb 2026)\n- EMERGENCY PROTOCOLS (Jan 2026)\n- THERE IS NOW A PATH TO THE SENATE (Jan 2026)\n- LOVE AND A PLAN (Jan 2026)\n- TWO HOT DOGS EXTRA ONIONS AND MUSTARD (Dec 2025)\n- REDISCOVER LOVE (Dec 2025)\n\nVoice and style rules for themes:\n- ALL CAPS, punchy, 2-6 words\n- Mix urgency + humor + humanity -- never just doom\n- Pop culture, movie, music, sports references welcome\n- Historical echoes (civil rights, past victories) welcome\n- Self-deprecating humor welcome\n- Direct address to reader welcome\n- No violence or cheating themes\n- Rotate categories: news hook, self-care, historical inspiration, pop culture riff, direct urgency, FT6 milestone, philosophical, humor-first\n- Do NOT repeat a category used in the last 2 weeks\n\nGive me 4 fresh opening theme ideas for the Field Team 6 newsletter next week. Return ONLY 4 lines, each: THEME TITLE (ALL CAPS, 3-6 words) -- one sentence description. No intro, no numbering, no markdown.'
-              : 'Search for the latest voter registration, voter suppression, and election news from the past week. Return ONLY a bullet list of 4-6 items in this format: <li><strong>Headline</strong> — one sentence summary (<a href="URL">Source</a>, Date)</li>. No intro text.';
+              : 'Search for the latest voter registration, voter suppression, and election news from the past week. Return ONLY a <ul> bullet list of 4-6 items. Each item: <li><strong>Headline</strong> &mdash; one sentence summary (<a href="URL">Source</a>, Date)</li>. Wrap all items in a single <ul> tag. No intro text, no other HTML outside the <ul>.';
             var aiRes = await fetch('/.netlify/functions/ai-check', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({prompt: prompt, model: 'claude-sonnet-4-20250514', max_tokens: 800}),
+              body: JSON.stringify({prompt: prompt, model: 'claude-sonnet-4-20250514', max_tokens: 1500}),
               signal: AbortSignal.timeout(30000)
             });
             var aiData = await aiRes.json();
@@ -1826,6 +1826,8 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
             // Insert new content after h2
             var tmp = document.createElement('div');
             if (isThemes) { tmp.innerHTML = newText.split('\n').filter(function(l){var _p=l.trim().split(/--|\u2014|\u2013/); return _p.length>=2 && _p[0].trim() && _p[1].trim().length>=5;}).map(function(l){return l.replace(/^(.+?)\s*(--|\u2014|\u2013)\s*/,'<strong>$1</strong> \u2014 ');}).map(function(l){return '<p style="margin:0.5em 0">' + l + '</p>';}).join(''); } else { tmp.innerHTML = newText; }
+            // Wrap orphan li elements in ul for news refresh
+            if (!isThemes) { tmp.querySelectorAll('li').forEach(function(li){ if(li.parentElement === tmp){ var ul = li.previousElementSibling; if(!ul || ul.nodeName !== 'UL'){ ul = document.createElement('ul'); li.parentNode.insertBefore(ul, li); } ul.appendChild(li); } }); tmp.querySelectorAll('ul').forEach(function(ul){ul.style.cssText='padding-left:20px;margin-left:20px;list-style-type:disc;list-style-position:outside';}); }
             tmp.querySelectorAll('a').forEach(function(a){a.setAttribute('target','_blank');});
             var ref = h2El;
             while (tmp.firstChild) {
@@ -1946,8 +1948,9 @@ Give exactly 4 options. Each = ALL-CAPS title + one sentence on the hook/categor
 Search the web right now for the 5 most recent and relevant headlines about: voter registration, voting rights, voter suppression, 2026 elections, midterms, civic activism, democracy. Prioritize Democracy Docket (democracydocket.com), Brennan Center (brennancenter.org), Robert Hubbell's "Today's Edition" substack, and Jessica Craven's "Chop Wood, Carry Water" substack when relevant results exist. Rules:
 - Output NOTHING at all before the first ## heading. Not one word. No "I'll help", no "Let me search", no "Here's the framework", nothing. Start with ## immediately.
 - No "---" horizontal rules anywhere in the output
-- Format each news item as: - [Headline] (<a href="[full article URL]" target="_blank">[Publication Name]</a>, [date])
+- Format each news item as: <li><strong>Headline</strong> &mdash; one sentence summary (<a href="[full article URL]" target="_blank">[Publication Name]</a>, [date])</li>
 - The headline text must NOT be a link. Only the publication name is linked.
+- Wrap all news items in a single <ul> tag.
 
 ## UPCOMING EVENTS TO PROMOTE
 MOBILIZE_EVENTS_PLACEHOLDER
@@ -2054,34 +2057,6 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                             el.style.fontStyle = 'normal';
                         }
                     }
-                });
-
-                // Refresh buttons on THIS WEEK'S NEWS and OPENING THEME headers
-                results.parentElement.querySelectorAll('h2').forEach(h2 => {
-                  const txt = h2.textContent.trim().toUpperCase();
-                  let rType = txt.includes("THIS WEEK") ? 'news' : txt.includes("OPENING THEME") ? 'themes' : null;
-                  if (!rType) return;
-                  const rb = document.createElement('button');
-                  rb.title = 'Refresh';
-                  rb.style.cssText = 'margin-left:8px;background:#ebf0ff;border:1px solid #b8c4e0;cursor:pointer;vertical-align:middle;padding:3px;border-radius:50%;transition:background 0.2s;line-height:0';
-                  rb.innerHTML = '<svg id="rb-svg-'+Math.random().toString(36).slice(2)+'" width="16" height="16" viewBox="0 0 24 24" fill="#1a3a6b" xmlns="http://www.w3.org/2000/svg"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
-                  rb.onmouseenter=()=>rb.style.background='rgba(26,58,107,0.1)';
-                  rb.onmouseleave=()=>rb.style.background='none';
-                  rb.onclick = async () => {
-                    const _svg=rb.querySelector('svg');if(_svg){_svg.style.cssText='display:inline-block;transform-origin:center;animation:blurb-spin 0.8s linear infinite';} rb.disabled=true;
-                    rb.disabled=true;
-                    try {
-                      const p = rType==='news'
-                        ? 'Search the web NOW for 5 fresh headlines about voter registration, voting rights, voter suppression, 2026 midterms, civic activism — DIFFERENT from any already shown. Output ONLY a <ul> with <li> items. No intro. Each item: [Headline] (<a href="[URL]" target="_blank">[Publication]</a>, [date]). Headline text must NOT be a link.'
-                        : 'You are writing opening theme options for the FT6 Weekly newsletter. FT6 does in-person voter registration in swing states with humor and humanity. 8.3M registered. Goal: 3M more, flip Senate 2026. Context: No Kings 3/28 protests, SAVE Act voter suppression.\n\nDo NOT repeat these past themes or their category: LETS PUT ON A SHOW, CUT TRUMPS TERM IN HALF, THE RIGHT PEOPLE, EMERGENCY PROTOCOLS, THERE IS NOW A PATH TO THE SENATE, LOVE AND A PLAN, TWO HOT DOGS EXTRA ONIONS, REDISCOVER LOVE, TECTONIC, GIVING THANKS, ORGANIZING TURNS THE IMPOSSIBLE INTO REALITY, HONOR YOUR RIGHTEOUS WRATH, SING IT, THROUGH THE RIBBON, ANYTHING IS POSSIBLE, REMEMBER YOU EXIST, STAY LOUD STAY UNITED STAY BRAVE, MAKE HISTORY WITH US, NONVIOLENCE IS THE WAY FORWARD, WE WONT BACK DOWN, UPSET VICTORY FOR THE RESISTANCE, DEMOCRATS SHOW A SPINE, 10000 HOURS THE MATH OF MOVEMENTS, DOOM-SKIPPING AND HOPE-SCROLLING, DO IT FOR JOHN LEWIS, BIG BEAUTIFUL BLUE WAVE COMING, HOLLYWOOD NEEDS HEROES, BIGGEST PROTEST IN HISTORY, A WILDFIRE OF INSPIRATION, LISTEN TO THE BOSS, MISSION IMPOSSIBLE, STICK TO THE ANTI-AUTOCRACY PLAYBOOK, NEW PROBLEMS NEED NEW SOLUTIONS, NO GREATER POWER THAN THE PEOPLE, PLEASE GROW A SPINE, LANDSLIDE VICTORY FOR DEMOCRACY, BREAKING UNBROKEN WINNING STREAK, FIST IN THE AIR, HOW WE SURVIVE, 3 BIG IDEAS, CONTEST EVERY RACE, TAKING IT TO THE STREETS, DAMN THE TORPEDOES, STOP THE MAGA VOTER SUPPRESSION BILL, WE ARE BACK, DAY ONE, LETTER OF HOPE FROM HELL, WHAT WE KNOW THAT AMERICA DOES NOT, UNBREAKABLE, WE WILL DO THIS TOGETHER, ALL GAS NO BREAKS, ONE VOTE COULD WIN IT ALL, HOW THE LIGHT GETS IN, WERE GONNA WEAR PANTS, WERE EXPANDING THE MAP, HISTORIC ADVANCE IN VOTER REGISTRATION, TAKE TWO.\n\nVOICE: ALL CAPS 2-6 words, punchy, mix urgency+humor+humanity, pop culture/historical refs welcome, direct address fine, NEVER cheating/violence metaphors. Rotate categories: current news hook, self-care/activism, historical inspiration, pop culture riff, urgency, FT6 milestone, philosophical, humor-first.\n\nGenerate 4 themes from 4 DIFFERENT categories. Output ONLY <ul><li> list, no intro. Each: <strong>TITLE</strong> &mdash; one sentence hook.';
-                      const resp = await fetch('/.netlify/functions/ai-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});
-                      const data = await resp.json();
-                      const newHtml = ((data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''))||data.text||'';
-                      let _cw=h2.parentNode.querySelector('[data-content-wrap]');if(!_cw){_cw=document.createElement('div');_cw.dataset.contentWrap='1';h2.parentNode.insertBefore(_cw,h2.nextElementSibling&&h2.nextElementSibling.dataset&&h2.nextElementSibling.dataset.warn?h2.nextElementSibling.nextSibling:h2.nextSibling);}const _nh=newHtml.split('## ').join('').split('##').join('');_cw.innerHTML=_nh;_cw.querySelectorAll('ul').forEach(ul=>{ul.style.paddingLeft='20px';ul.style.marginLeft='20px';ul.style.listStyleType='disc';ul.style.listStylePosition='outside';});_convertToList(_cw);
-                    } catch(e){console.error(e);}
-                    if(_svg){_svg.style.cssText='';} rb.disabled=false;
-                    rb.disabled=false;
-                  };
                 });
 
 
