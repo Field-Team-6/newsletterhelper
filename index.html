@@ -1822,7 +1822,8 @@ If NO issues found return []. Return ONLY the JSON array, no other text.`;
             toRemove.forEach(function(n) { n.remove(); });
             // Insert new content after h2
             var tmp = document.createElement('div');
-            tmp.innerHTML = newText.split('\n').filter(function(l){return l.trim();}).map(function(l){return l.replace(/^(.+?)\s*(--|—|–)\s*/,'<strong>$1</strong> — ');}).map(function(l){return '<p style="margin:0.5em 0">' + l + '</p>';}).join('');
+            tmp.innerHTML = newText.split('\n').filter(function(l){return l.trim() && (l.indexOf('--') !== -1 || l.indexOf('—') !== -1 || l.indexOf('–') !== -1);}).map(function(l){return l.replace(/^(.+?)\s*(--|—|–)\s*/,'<strong>$1</strong> — ');}).map(function(l){return '<p style="margin:0.5em 0">' + l + '</p>';}).join('');
+            tmp.querySelectorAll('a').forEach(function(a){a.setAttribute('target','_blank');});
             var ref = h2El;
             while (tmp.firstChild) {
               h2El.parentNode.insertBefore(tmp.firstChild, ref.nextSibling);
@@ -1988,7 +1989,7 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                 const aiData = await aiResp.json();
                 const html = aiData.text || aiData.text || '<p>No response from AI.</p>';
 
-                const cleanHtml = html.replace(/##\s*/g,'');
+                var cleanHtml = html.replace(/##\s*/g,'').replace(/<a /g,'<a target="_blank" ');
                 results.innerHTML = `
                     <div style="margin:24px -40px -40px -40px;border-top:2px solid #e2e8f0;padding:20px 40px 0 40px;overflow:hidden">
                         ${cleanHtml}
