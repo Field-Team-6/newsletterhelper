@@ -1990,6 +1990,9 @@ Format as clean HTML. Use <h2> for ## headers, <p> for text, <ul><li> for lists.
                 const html = aiData.text || aiData.text || '<p>No response from AI.</p>';
 
                 var cleanHtml = html.replace(/##\s*/g,'').replace(/<a /g,'<a target="_blank" ');
+                var _d = document.createElement('div'); _d.innerHTML = cleanHtml;
+                _d.querySelectorAll('li').forEach(function(li){ if(li.parentElement === _d){ var ul = li.previousElementSibling; if(!ul || ul.nodeName !== 'UL'){ ul = document.createElement('ul'); li.parentNode.insertBefore(ul, li); } ul.appendChild(li); } });
+                cleanHtml = _d.innerHTML;
                 results.innerHTML = `
                     <div style="margin:24px -40px -40px -40px;border-top:2px solid #e2e8f0;padding:20px 40px 0 40px;overflow:hidden">
                         ${cleanHtml}
